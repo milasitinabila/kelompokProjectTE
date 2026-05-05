@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 export interface AuthUser {
   username: string;
   name: string;
-  role: string;
+  role: "admin" | "pelanggan";
 }
 
 interface AuthContextValue {
@@ -11,12 +11,13 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  isAdmin: boolean;
+  isPelanggan: boolean;
 }
 
-const USERS: Array<{ username: string; password: string; name: string; role: string }> = [
+const USERS: Array<{ username: string; password: string; name: string; role: "admin" | "pelanggan" }> = [
   { username: "admin", password: "admin123", name: "Administrator", role: "admin" },
-  { username: "kasir", password: "kasir123", name: "Kasir Utama", role: "kasir" },
-  { username: "teknisi", password: "teknisi123", name: "Teknisi Senior", role: "teknisi" },
+  { username: "pelanggan", password: "pelanggan123", name: "Budi Santoso", role: "pelanggan" },
 ];
 
 const AUTH_KEY = "km_auth_user";
@@ -57,7 +58,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      isLoading,
+      login,
+      logout,
+      isAdmin: user?.role === "admin",
+      isPelanggan: user?.role === "pelanggan",
+    }}>
       {children}
     </AuthContext.Provider>
   );

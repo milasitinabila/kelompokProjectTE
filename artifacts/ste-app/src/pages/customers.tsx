@@ -3,36 +3,77 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  useListCustomers, 
-  getListCustomersQueryKey
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  useListCustomers,
+  getListCustomersQueryKey,
+  useCreateCustomer,
 } from "@workspace/api-client-react";
-import { Search, Plus, User, Phone, Mail } from "lucide-react";
+import { Search, Plus, User, Phone, Mail, MapPin } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Customers() {
   const [search, setSearch] = useState("");
-  
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "" });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const createCustomer = useCreateCustomer();
+
   const { data: customers, isLoading } = useListCustomers(
     { search: search || undefined },
     { query: { queryKey: getListCustomersQueryKey({ search: search || undefined }) } }
   );
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createCustomer.mutate(
+      {
+        data: {
+          name: form.name,
+          phone: form.phone,
+          email: form.email || undefined,
+          address: form.address || undefined,
+        }
+      },
+      {
+        onSuccess: () => {
+          toast({ title: "Pelanggan Ditambahkan", description: `${form.name} berhasil ditambahkan.` });
+          queryClient.invalidateQueries({ queryKey: getListCustomersQueryKey() });
+          setShowModal(false);
+          setForm({ name: "", phone: "", email: "", address: "" });
+        },
+        onError: () => {
+          toast({ variant: "destructive", title: "Gagal", description: "Pelanggan gagal ditambahkan." });
+        }
+      }
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Customers" 
-        description="Manage client directory and contact information."
+      <PageHeader
+        title="Data Pelanggan"
+        description="Kelola direktori pelanggan dan informasi kontak."
       >
-        <Button>
+        <Button onClick={() => setShowModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Add Customer
+          Tambah Pelanggan
         </Button>
       </PageHeader>
 
       <div className="relative w-full max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input 
-          placeholder="Search customers..." 
+        <Input
+          placeholder="Cari pelanggan..."
           className="pl-9 bg-card"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -48,7 +89,8 @@ export default function Customers() {
       ) : customers?.length === 0 ? (
         <div className="p-16 text-center border border-dashed rounded-lg bg-card/50">
           <User className="w-12 h-12 mb-4 mx-auto opacity-20" />
-          <p className="text-muted-foreground mb-4">No customers found.</p>
+          <p className="text-muted-foreground mb-4">Belum ada pelanggan ditemukan.</p>
+          <Button variant="outline" onClick={() => setShowModal(true)}>Tambah pelanggan pertama</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -61,13 +103,19 @@ export default function Customers() {
                 <h3 className="font-bold text-lg leading-tight mb-2">{customer.name}</h3>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5" />
+                    <Phone className="w-3.5 h-3.5 flex-shrink-0" />
                     <span>{customer.phone}</span>
                   </div>
                   {customer.email && (
                     <div className="flex items-center gap-2">
-                      <Mail className="w-3.5 h-3.5" />
+                      <Mail className="w-3.5 h-3.5 flex-shrink-0" />
                       <span className="truncate">{customer.email}</span>
+                    </div>
+                  )}
+                  {customer.address && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span className="truncate">{customer.address}</span>
                     </div>
                   )}
                 </div>
@@ -76,6 +124,58 @@ export default function Customers() {
           ))}
         </div>
       )}
+
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Pelanggan Baru</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nama Lengkap *</Label>
+              <Input
+                required
+                placeholder="Nama pelanggan"
+                value={form.name}
+                onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Nomor Telepon *</Label>
+              <Input
+                required
+                type="tel"
+                placeholder="08xx-xxxx-xxxx"
+                value={form.phone}
+                onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                placeholder="email@contoh.com"
+                value={form.email}
+                onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Alamat</Label>
+              <Input
+                placeholder="Alamat lengkap"
+                value={form.address}
+                onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))}
+              />
+            </div>
+            <DialogFooter className="gap-2">
+              <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Batal</Button>
+              <Button type="submit" disabled={createCustomer.isPending}>
+                {createCustomer.isPending ? "Menyimpan..." : "Simpan"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

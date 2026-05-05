@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  useListProducts, 
+import {
+  useListProducts,
   getListProductsQueryKey,
   useListPosSessions,
   getListPosSessionsQueryKey,
@@ -19,7 +20,6 @@ import {
 } from "@workspace/api-client-react";
 import { formatIDR } from "@/lib/format";
 import { Search, ShoppingCart, Plus, Minus, Trash2, MonitorPlay, PowerOff } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface CartItem extends Product {
@@ -32,7 +32,7 @@ export default function Pos() {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
-  
+
   const { data: products, isLoading: loadingProducts } = useListProducts(
     { search: search || undefined },
     { query: { queryKey: getListProductsQueryKey({ search: search || undefined }) } }
@@ -41,7 +41,7 @@ export default function Pos() {
   const { data: sessions } = useListPosSessions(
     { query: { queryKey: getListPosSessionsQueryKey() } }
   );
-  
+
   const activeSession = sessions?.find(s => s.status === 'open');
 
   const openSession = useOpenPosSession();
@@ -54,7 +54,7 @@ export default function Pos() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListPosSessionsQueryKey() });
-          toast({ title: "Session Opened", description: "Kasir siap menerima transaksi." });
+          toast({ title: "Sesi Dibuka", description: "Kasir siap menerima transaksi." });
         }
       }
     );
@@ -67,7 +67,8 @@ export default function Pos() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListPosSessionsQueryKey() });
-          toast({ title: "Session Closed", description: "Rekap transaksi telah dicatat." });
+          setCart([]);
+          toast({ title: "Sesi Ditutup", description: "Sesi kasir telah berakhir." });
         }
       }
     );
@@ -75,63 +76,58 @@ export default function Pos() {
 
   const addToCart = (product: Product) => {
     setCart(prev => {
-      const exists = prev.find(i => i.id === product.id);
-      if (exists) {
+      const existing = prev.find(i => i.id === product.id);
+      if (existing) {
         return prev.map(i => i.id === product.id ? { ...i, cartQuantity: i.cartQuantity + 1 } : i);
       }
       return [...prev, { ...product, cartQuantity: 1 }];
     });
   };
 
-  const updateQuantity = (id: number, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQ = item.cartQuantity + delta;
-        return newQ > 0 ? { ...item, cartQuantity: newQ } : item;
-      }
-      return item;
-    }));
+  const updateQty = (id: number, delta: number) => {
+    setCart(prev =>
+      prev.map(i => i.id === id ? { ...i, cartQuantity: Math.max(1, i.cartQuantity + delta) } : i)
+    );
   };
 
   const removeFromCart = (id: number) => {
     setCart(prev => prev.filter(i => i.id !== id));
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
-  const tax = subtotal * 0.11; // 11% PPN
+  const subtotal = cart.reduce((sum, i) => sum + (i.price * i.cartQuantity), 0);
+  const tax = Math.round(subtotal * 0.11);
   const total = subtotal + tax - discount;
 
   const handleCheckout = () => {
-    if (cart.length === 0) return;
-    if (!activeSession) {
-      toast({ variant: "destructive", title: "Sesi Kasir Tutup", description: "Buka sesi kasir terlebih dahulu." });
+    if (!activeSession) return;
+    if (cart.length === 0) {
+      toast({ variant: "destructive", title: "Keranjang Kosong", description: "Tambahkan produk terlebih dahulu." });
       return;
     }
 
-    const items: CreateTransactionBodyItemsItem[] = cart.map(item => ({
-      productId: item.id,
-      quantity: item.cartQuantity,
-      unitPrice: item.price
+    const items: CreateTransactionBodyItemsItem[] = cart.map(i => ({
+      productId: i.id,
+      quantity: i.cartQuantity,
+      unitPrice: i.price,
     }));
 
     createTx.mutate(
-      { 
+      {
         data: {
           sessionId: activeSession.id,
           items,
-          discount,
-          tax
+          discount: discount || undefined,
         }
       },
       {
-        onSuccess: () => {
+        onSuccess: (tx) => {
+          toast({ title: "Transaksi Berhasil", description: `Invoice ${tx.invoiceNumber} dibuat.` });
           setCart([]);
           setDiscount(0);
-          toast({ title: "Transaksi Berhasil", description: "Menunggu pembayaran." });
-          // In a real app, this would open a payment modal or redirect to detail page
+          queryClient.invalidateQueries({ queryKey: getListPosSessionsQueryKey() });
         },
         onError: () => {
-          toast({ variant: "destructive", title: "Error", description: "Gagal membuat transaksi." });
+          toast({ variant: "destructive", title: "Gagal", description: "Transaksi gagal diproses." });
         }
       }
     );
@@ -139,36 +135,40 @@ export default function Pos() {
 
   if (!activeSession) {
     return (
-      <div className="h-full flex flex-col items-center justify-center space-y-6">
-        <MonitorPlay className="w-24 h-24 text-muted" />
-        <div className="text-center">
-          <h2 className="text-2xl font-bold">POS Offline</h2>
-          <p className="text-muted-foreground mt-2">Buka sesi kasir untuk mulai menerima transaksi.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+        <PageHeader title="POS Kasir" description="Sistem Point of Sale." />
+        <div className="text-center space-y-4">
+          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <MonitorPlay className="w-12 h-12 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold">Tidak Ada Sesi Aktif</h2>
+          <p className="text-muted-foreground max-w-sm">Buka sesi kasir terlebih dahulu untuk mulai menerima transaksi.</p>
+          <Button size="lg" onClick={handleOpenSession} disabled={openSession.isPending}>
+            <MonitorPlay className="w-5 h-5 mr-2" />
+            {openSession.isPending ? "Membuka..." : "Buka Sesi Kasir"}
+          </Button>
         </div>
-        <Button size="lg" onClick={handleOpenSession} disabled={openSession.isPending}>
-          {openSession.isPending ? "Membuka..." : "Buka Sesi Kasir"}
-        </Button>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex gap-6">
-      {/* Product Selection */}
-      <div className="flex-1 flex flex-col min-w-0 bg-card rounded-xl border overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+    <div className="flex gap-4 h-[calc(100vh-6rem)]">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex gap-4 mb-4 items-center">
+          <PageHeader title="POS Kasir" description="" />
+          <div className="relative flex-1 max-w-md ml-auto">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Cari produk atau layanan..." 
+            <Input
+              placeholder="Cari produk atau layanan..."
               className="pl-9"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
-              Kasir Aktif: Admin
+              Kasir: Admin
             </Badge>
             <Button variant="destructive" size="icon" onClick={handleCloseSession} title="Tutup Sesi">
               <PowerOff className="w-4 h-4" />
@@ -176,7 +176,7 @@ export default function Pos() {
           </div>
         </div>
 
-        <ScrollArea className="flex-1 p-4">
+        <ScrollArea className="flex-1">
           {loadingProducts ? (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
@@ -184,11 +184,11 @@ export default function Pos() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-1">
               {products?.map(product => (
-                <Card 
-                  key={product.id} 
-                  className="cursor-pointer hover:border-primary transition-all hover-elevate hover:-translate-y-1 overflow-hidden"
+                <Card
+                  key={product.id}
+                  className="cursor-pointer hover:border-primary transition-all hover:-translate-y-1 overflow-hidden"
                   onClick={() => addToCart(product)}
                 >
                   <div className="h-2 bg-gradient-to-r from-primary to-accent" />
@@ -207,7 +207,6 @@ export default function Pos() {
         </ScrollArea>
       </div>
 
-      {/* Cart Sidebar */}
       <div className="w-[380px] bg-card rounded-xl border flex flex-col flex-shrink-0">
         <div className="p-4 border-b bg-muted/30 flex items-center gap-2">
           <ShoppingCart className="w-5 h-5 text-primary" />
@@ -217,31 +216,31 @@ export default function Pos() {
 
         <ScrollArea className="flex-1 p-4">
           {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground py-20">
-              <ShoppingCart className="w-12 h-12 mb-4 opacity-20" />
-              <p>Belum ada barang di keranjang</p>
+            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+              <ShoppingCart className="w-10 h-10 mb-2 opacity-20" />
+              <p className="text-sm">Keranjang kosong</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {cart.map(item => (
-                <div key={item.id} className="flex flex-col gap-2 p-3 bg-muted/20 rounded-lg border border-border/50">
-                  <div className="flex justify-between items-start">
-                    <span className="font-medium text-sm leading-tight pr-4">{item.name}</span>
-                    <button onClick={() => removeFromCart(item.id)} className="text-muted-foreground hover:text-destructive">
+                <div key={item.id} className="flex flex-col gap-2 p-3 rounded-lg border bg-muted/20">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-sm line-clamp-1 flex-1">{item.name}</span>
+                    <button onClick={() => removeFromCart(item.id)} className="text-destructive hover:text-destructive/80 ml-2">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-sm font-bold text-primary">{formatIDR(item.price)}</span>
-                    <div className="flex items-center gap-2 bg-background border rounded-md p-1">
-                      <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:bg-muted rounded">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateQty(item.id, -1)}>
                         <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="text-sm w-6 text-center font-medium">{item.cartQuantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:bg-muted rounded">
+                      </Button>
+                      <span className="w-8 text-center font-bold">{item.cartQuantity}</span>
+                      <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateQty(item.id, 1)}>
                         <Plus className="w-3 h-3" />
-                      </button>
+                      </Button>
                     </div>
+                    <span className="font-bold text-primary">{formatIDR(item.price * item.cartQuantity)}</span>
                   </div>
                 </div>
               ))}
@@ -249,33 +248,36 @@ export default function Pos() {
           )}
         </ScrollArea>
 
-        <div className="p-4 border-t bg-muted/10 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
+        <div className="p-4 border-t space-y-3">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Subtotal</span>
             <span>{formatIDR(subtotal)}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">PPN (11%)</span>
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Pajak (11%)</span>
             <span>{formatIDR(tax)}</span>
           </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-sm text-destructive">
-              <span>Diskon</span>
-              <span>-{formatIDR(discount)}</span>
-            </div>
-          )}
-          <Separator />
-          <div className="flex justify-between items-end">
-            <span className="font-semibold text-lg">Total</span>
-            <span className="font-bold text-2xl text-primary">{formatIDR(total)}</span>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground flex-1">Diskon (Rp)</span>
+            <Input
+              type="number"
+              className="w-28 h-8 text-sm"
+              value={discount || ""}
+              onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+              placeholder="0"
+            />
           </div>
-          
-          <Button 
-            className="w-full mt-4 h-12 text-lg font-bold" 
-            disabled={cart.length === 0 || createTx.isPending}
+          <Separator />
+          <div className="flex justify-between items-center font-bold">
+            <span className="text-lg">Total</span>
+            <span className="text-xl text-primary">{formatIDR(total)}</span>
+          </div>
+          <Button
+            className="w-full h-12 text-base font-bold"
             onClick={handleCheckout}
+            disabled={createTx.isPending || cart.length === 0}
           >
-            {createTx.isPending ? "Memproses..." : "PROSES PEMBAYARAN"}
+            {createTx.isPending ? "Memproses..." : "Bayar Sekarang"}
           </Button>
         </div>
       </div>

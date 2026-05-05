@@ -13,17 +13,26 @@ import { useAuth } from "@/hooks/use-auth";
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
-  const links = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/pos", label: "POS", icon: Receipt },
+  const adminLinks = [
+    { href: "/", label: "Dasbor", icon: LayoutDashboard },
+    { href: "/pos", label: "POS Kasir", icon: Receipt },
     { href: "/contracts", label: "Kontrak", icon: FileText },
     { href: "/transactions", label: "Transaksi", icon: Activity },
     { href: "/products", label: "Inventaris", icon: Package },
     { href: "/customers", label: "Pelanggan", icon: Users },
     { href: "/security", label: "Keamanan", icon: ShieldAlert },
   ];
+
+  const pelangganLinks = [
+    { href: "/contracts", label: "Kontrak Saya", icon: FileText },
+    { href: "/transactions", label: "Transaksi Saya", icon: Activity },
+  ];
+
+  const links = isAdmin ? adminLinks : pelangganLinks;
+
+  const roleLabel = isAdmin ? "Administrator" : "Pelanggan";
 
   return (
     <aside className="w-64 border-r border-border bg-card flex flex-col h-full">
@@ -36,12 +45,18 @@ export function Sidebar() {
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Sistem Transaksi</span>
         </div>
       </div>
-      
+
+      {!isAdmin && (
+        <div className="mx-3 mt-3 px-3 py-2 rounded-md bg-primary/10 text-primary text-xs text-center">
+          Selamat datang, {user?.name}
+        </div>
+      )}
+
       <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
         {links.map((link) => {
           const Icon = link.icon;
           const isActive = location === link.href || (link.href !== "/" && location.startsWith(link.href));
-          
+
           return (
             <Link key={link.href} href={link.href} className="outline-none block">
               <div
@@ -58,7 +73,7 @@ export function Sidebar() {
           );
         })}
       </nav>
-      
+
       <div className="p-4 border-t border-border mt-auto">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground">
@@ -66,7 +81,7 @@ export function Sidebar() {
           </div>
           <div className="flex flex-col flex-1 min-w-0">
             <span className="text-sm font-medium truncate">{user?.name ?? "Pengguna"}</span>
-            <span className="text-xs text-muted-foreground truncate capitalize">{user?.role ?? ""}</span>
+            <span className="text-xs text-muted-foreground truncate">{roleLabel}</span>
           </div>
           <button
             onClick={logout}

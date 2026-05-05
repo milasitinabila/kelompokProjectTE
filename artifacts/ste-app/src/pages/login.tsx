@@ -78,13 +78,10 @@ export default function Login() {
               <p className="text-xs text-muted-foreground text-center mb-3">Akun tersedia:</p>
               <div className="space-y-1.5 text-xs text-muted-foreground font-mono">
                 <div className="flex justify-between bg-muted/30 px-3 py-1.5 rounded">
-                  <span>admin</span><span>admin123</span>
+                  <span>admin</span><span className="text-muted-foreground/60">admin123</span>
                 </div>
                 <div className="flex justify-between bg-muted/30 px-3 py-1.5 rounded">
-                  <span>kasir</span><span>kasir123</span>
-                </div>
-                <div className="flex justify-between bg-muted/30 px-3 py-1.5 rounded">
-                  <span>teknisi</span><span>teknisi123</span>
+                  <span>pelanggan</span><span className="text-muted-foreground/60">pelanggan123</span>
                 </div>
               </div>
             </div>

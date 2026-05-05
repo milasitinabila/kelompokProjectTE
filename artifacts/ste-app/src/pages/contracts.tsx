@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  useListContracts, 
+import {
+  useListContracts,
   getListContractsQueryKey,
   ListContractsStatus
 } from "@workspace/api-client-react";
@@ -19,10 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Contracts() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  
+  const { isAdmin } = useAuth();
+
   const { data: contracts, isLoading } = useListContracts(
     { status: statusFilter !== "all" ? statusFilter as ListContractsStatus : undefined },
     { query: { queryKey: getListContractsQueryKey({ status: statusFilter !== "all" ? statusFilter as ListContractsStatus : undefined }) } }
@@ -37,41 +39,53 @@ export default function Contracts() {
     }
   };
 
+  const translateStatus = (status: string) => {
+    switch (status) {
+      case 'draft': return 'Draft';
+      case 'active': return 'Aktif';
+      case 'completed': return 'Selesai';
+      case 'cancelled': return 'Dibatalkan';
+      default: return status;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Contracts" 
-        description="Manage service agreements, installations, and warranties."
+      <PageHeader
+        title={isAdmin ? "Manajemen Kontrak" : "Kontrak Saya"}
+        description={isAdmin ? "Kelola perjanjian layanan, pemasangan, dan garansi." : "Lihat detail kontrak servis Anda."}
       >
-        <Link href="/contracts/new" className="outline-none block">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            New Contract
-          </Button>
-        </Link>
+        {isAdmin && (
+          <Link href="/contracts/new" className="outline-none block">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Kontrak Baru
+            </Button>
+          </Link>
+        )}
       </PageHeader>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Search contracts..." 
+          <Input
+            type="search"
+            placeholder="Cari kontrak..."
             className="pl-9 bg-card"
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[150px] bg-card">
+            <SelectTrigger className="w-full sm:w-[160px] bg-card">
               <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Filter Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="all">Semua Status</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="active">Aktif</SelectItem>
+              <SelectItem value="completed">Selesai</SelectItem>
+              <SelectItem value="cancelled">Dibatalkan</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -87,10 +101,12 @@ export default function Contracts() {
         </div>
       ) : contracts?.length === 0 ? (
         <div className="text-center py-20 border border-dashed rounded-lg bg-card/50">
-          <p className="text-muted-foreground mb-4">No contracts found.</p>
-          <Link href="/contracts/new">
-            <Button variant="outline">Create your first contract</Button>
-          </Link>
+          <p className="text-muted-foreground mb-4">Belum ada kontrak ditemukan.</p>
+          {isAdmin && (
+            <Link href="/contracts/new">
+              <Button variant="outline">Buat kontrak pertama</Button>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -106,10 +122,10 @@ export default function Contracts() {
                         <p className="text-sm text-muted-foreground mt-1">{contract.customerName}</p>
                       </div>
                       <Badge className={getStatusColor(contract.status)} variant="outline">
-                        {contract.status.charAt(0).toUpperCase() + contract.status.slice(1)}
+                        {translateStatus(contract.status)}
                       </Badge>
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-2 text-xs">
                       <Badge variant="secondary">{translateServiceType(contract.serviceType)}</Badge>
                       {contract.startDate && (
@@ -119,14 +135,15 @@ export default function Contracts() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="mt-6 pt-4 border-t flex justify-between items-center">
                     <div className="text-sm font-medium">
                       {contract.totalValue ? formatIDR(contract.totalValue) : '-'}
                     </div>
-                    <div className="flex gap-2">
-                      <div className={`w-2 h-2 rounded-full ${contract.signedByProvider ? 'bg-primary' : 'bg-muted'}`} title="Provider signed" />
-                      <div className={`w-2 h-2 rounded-full ${contract.signedByCustomer ? 'bg-primary' : 'bg-muted'}`} title="Customer signed" />
+                    <div className="flex gap-2 items-center">
+                      <span className="text-[10px] text-muted-foreground mr-1">TTD:</span>
+                      <div className={`w-2 h-2 rounded-full ${contract.signedByProvider ? 'bg-primary' : 'bg-muted'}`} title="Penyedia" />
+                      <div className={`w-2 h-2 rounded-full ${contract.signedByCustomer ? 'bg-primary' : 'bg-muted'}`} title="Pelanggan" />
                     </div>
                   </div>
                 </CardContent>

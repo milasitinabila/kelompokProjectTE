@@ -28,7 +28,7 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRouter() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
 
   if (isLoading) {
     return (
@@ -42,20 +42,39 @@ function ProtectedRouter() {
     return <Login />;
   }
 
+  if (isAdmin) {
+    return (
+      <Shell>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/pos" component={Pos} />
+          <Route path="/contracts" component={Contracts} />
+          <Route path="/contracts/new" component={ContractNew} />
+          <Route path="/contracts/:id" component={ContractDetail} />
+          <Route path="/transactions" component={Transactions} />
+          <Route path="/transactions/:id" component={TransactionDetail} />
+          <Route path="/products" component={Products} />
+          <Route path="/customers" component={Customers} />
+          <Route path="/security" component={Security} />
+          <Route component={NotFound} />
+        </Switch>
+      </Shell>
+    );
+  }
+
   return (
     <Shell>
       <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/pos" component={Pos} />
         <Route path="/contracts" component={Contracts} />
-        <Route path="/contracts/new" component={ContractNew} />
         <Route path="/contracts/:id" component={ContractDetail} />
         <Route path="/transactions" component={Transactions} />
         <Route path="/transactions/:id" component={TransactionDetail} />
-        <Route path="/products" component={Products} />
-        <Route path="/customers" component={Customers} />
-        <Route path="/security" component={Security} />
-        <Route component={NotFound} />
+        <Route path="/">
+          <Redirect to="/contracts" />
+        </Route>
+        <Route>
+          <Redirect to="/contracts" />
+        </Route>
       </Switch>
     </Shell>
   );
