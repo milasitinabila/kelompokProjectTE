@@ -1,0 +1,81 @@
+import { useState } from "react";
+import { PageHeader } from "@/components/layout/page-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  useListCustomers, 
+  getListCustomersQueryKey
+} from "@workspace/api-client-react";
+import { Search, Plus, User, Phone, Mail } from "lucide-react";
+
+export default function Customers() {
+  const [search, setSearch] = useState("");
+  
+  const { data: customers, isLoading } = useListCustomers(
+    { search: search || undefined },
+    { query: { queryKey: getListCustomersQueryKey({ search: search || undefined }) } }
+  );
+
+  return (
+    <div className="space-y-6">
+      <PageHeader 
+        title="Customers" 
+        description="Manage client directory and contact information."
+      >
+        <Button>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Customer
+        </Button>
+      </PageHeader>
+
+      <div className="relative w-full max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input 
+          placeholder="Search customers..." 
+          className="pl-9 bg-card"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Card key={i} className="animate-pulse h-32 bg-muted/20" />
+          ))}
+        </div>
+      ) : customers?.length === 0 ? (
+        <div className="p-16 text-center border border-dashed rounded-lg bg-card/50">
+          <User className="w-12 h-12 mb-4 mx-auto opacity-20" />
+          <p className="text-muted-foreground mb-4">No customers found.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {customers?.map((customer) => (
+            <Card key={customer.id} className="hover-elevate hover:border-primary/50 transition-colors cursor-pointer group">
+              <CardContent className="p-6">
+                <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-lg mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  {customer.name.charAt(0).toUpperCase()}
+                </div>
+                <h3 className="font-bold text-lg leading-tight mb-2">{customer.name}</h3>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>{customer.phone}</span>
+                  </div>
+                  {customer.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5" />
+                      <span className="truncate">{customer.email}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -3,20 +3,33 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Sistem Transaksi Elektronik API - UMKM Jasa Elektronik
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: customers
+    description: Customer management
+  - name: contracts
+    description: Contract management
+  - name: pos
+    description: Point of Sale
+  - name: products
+    description: Product & inventory management
+  - name: transactions
+    description: Transaction management
+  - name: security
+    description: Security & audit logs
+  - name: dashboard
+    description: Dashboard & analytics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +37,587 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── CUSTOMERS ──────────────────────────────────────────────────────────────
+  /customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: List all customers
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Customer"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerBody"
+      responses:
+        "201":
+          description: Created customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /customers/{id}:
+    get:
+      operationId: getCustomer
+      tags: [customers]
+      summary: Get a customer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    put:
+      operationId: updateCustomer
+      tags: [customers]
+      summary: Update a customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerBody"
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    delete:
+      operationId: deleteCustomer
+      tags: [customers]
+      summary: Delete a customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ── CONTRACTS ───────────────────────────────────────────────────────────────
+  /contracts:
+    get:
+      operationId: listContracts
+      tags: [contracts]
+      summary: List all contracts
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, completed, cancelled]
+        - name: customerId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contract"
+    post:
+      operationId: createContract
+      tags: [contracts]
+      summary: Create a new contract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContractBody"
+      responses:
+        "201":
+          description: Created contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /contracts/{id}:
+    get:
+      operationId: getContract
+      tags: [contracts]
+      summary: Get a contract by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+    put:
+      operationId: updateContract
+      tags: [contracts]
+      summary: Update a contract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContractBody"
+      responses:
+        "200":
+          description: Updated contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /contracts/{id}/sign:
+    post:
+      operationId: signContract
+      tags: [contracts]
+      summary: Sign a contract (e-signature)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignContractBody"
+      responses:
+        "200":
+          description: Signed contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  # ── PRODUCTS ────────────────────────────────────────────────────────────────
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List all products
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product or service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ── POS SESSIONS ─────────────────────────────────────────────────────────────
+  /pos/sessions:
+    get:
+      operationId: listPosSessions
+      tags: [pos]
+      summary: List POS sessions
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PosSession"
+    post:
+      operationId: openPosSession
+      tags: [pos]
+      summary: Open a new POS session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenPosSessionBody"
+      responses:
+        "201":
+          description: Opened session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PosSession"
+
+  /pos/sessions/{id}/close:
+    post:
+      operationId: closePosSession
+      tags: [pos]
+      summary: Close a POS session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Closed session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PosSession"
+
+  # ── TRANSACTIONS ─────────────────────────────────────────────────────────────
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List all transactions
+      parameters:
+        - name: sessionId
+          in: query
+          schema:
+            type: integer
+        - name: customerId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, paid, cancelled, refunded]
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Create a new transaction (POS sale)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionBody"
+      responses:
+        "201":
+          description: Created transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /transactions/{id}:
+    get:
+      operationId: getTransaction
+      tags: [transactions]
+      summary: Get a transaction by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transaction with items and payments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionDetail"
+
+  /transactions/{id}/pay:
+    post:
+      operationId: payTransaction
+      tags: [transactions]
+      summary: Record payment for a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayTransactionBody"
+      responses:
+        "200":
+          description: Updated transaction with payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionDetail"
+
+  /transactions/{id}/cancel:
+    post:
+      operationId: cancelTransaction
+      tags: [transactions]
+      summary: Cancel a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  # ── SECURITY / AUDIT ────────────────────────────────────────────────────────
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [security]
+      summary: List audit logs
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: entityType
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: List of audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
+  /security/stats:
+    get:
+      operationId: getSecurityStats
+      tags: [security]
+      summary: Get security statistics and layer status
+      responses:
+        "200":
+          description: Security stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecurityStats"
+
+  # ── DASHBOARD ────────────────────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard KPI summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/revenue-chart:
+    get:
+      operationId: getRevenueChart
+      tags: [dashboard]
+      summary: Get daily revenue chart data (last 30 days)
+      responses:
+        "200":
+          description: Revenue chart data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RevenueChartPoint"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/contract-stats:
+    get:
+      operationId: getContractStats
+      tags: [dashboard]
+      summary: Get contract statistics by status
+      responses:
+        "200":
+          description: Contract stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractStats"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +625,520 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success, message]
+
+    # ── Customer ──────────────────────────────────────────────────────────────
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        idNumber:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, phone, createdAt]
+
+    CreateCustomerBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        idNumber:
+          type: string
+      required: [name, phone]
+
+    # ── Contract ──────────────────────────────────────────────────────────────
+    Contract:
+      type: object
+      properties:
+        id:
+          type: integer
+        contractNumber:
+          type: string
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        serviceType:
+          type: string
+          enum: [servis, instalasi, jual_beli, konsultasi]
+        title:
+          type: string
+        description:
+          type: string
+        totalValue:
+          type: number
+        paymentMethod:
+          type: string
+        startDate:
+          type: string
+          format: date
+        estimatedEndDate:
+          type: string
+          format: date
+        warrantyPeriod:
+          type: integer
+        status:
+          type: string
+          enum: [draft, active, completed, cancelled]
+        signedByProvider:
+          type: boolean
+        signedByCustomer:
+          type: boolean
+        providerSignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        customerSignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, contractNumber, customerId, serviceType, title, status, createdAt]
+
+    CreateContractBody:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        serviceType:
+          type: string
+          enum: [servis, instalasi, jual_beli, konsultasi]
+        title:
+          type: string
+        description:
+          type: string
+        totalValue:
+          type: number
+        paymentMethod:
+          type: string
+        startDate:
+          type: string
+          format: date
+        estimatedEndDate:
+          type: string
+          format: date
+        warrantyPeriod:
+          type: integer
+      required: [customerId, serviceType, title, totalValue, startDate]
+
+    UpdateContractBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        totalValue:
+          type: number
+        paymentMethod:
+          type: string
+        startDate:
+          type: string
+          format: date
+        estimatedEndDate:
+          type: string
+          format: date
+        warrantyPeriod:
+          type: integer
+        status:
+          type: string
+          enum: [draft, active, completed, cancelled]
+
+    SignContractBody:
+      type: object
+      properties:
+        signerRole:
+          type: string
+          enum: [provider, customer]
+        signerName:
+          type: string
+        signatureData:
+          type: string
+      required: [signerRole, signerName]
+
+    # ── Product ───────────────────────────────────────────────────────────────
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sku:
+          type: string
+        category:
+          type: string
+          enum: [spare_part, jasa, konsumable, lainnya]
+        description:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        unit:
+          type: string
+        minStock:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, category, price, stock, createdAt]
+
+    CreateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        sku:
+          type: string
+        category:
+          type: string
+          enum: [spare_part, jasa, konsumable, lainnya]
+        description:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        unit:
+          type: string
+        minStock:
+          type: integer
+      required: [name, category, price, stock]
+
+    # ── POS Session ───────────────────────────────────────────────────────────
+    PosSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        cashierName:
+          type: string
+        openedAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+        openingCash:
+          type: number
+        closingCash:
+          type: number
+          nullable: true
+        totalTransactions:
+          type: integer
+        totalRevenue:
+          type: number
+        status:
+          type: string
+          enum: [open, closed]
+      required: [id, cashierName, openedAt, openingCash, status]
+
+    OpenPosSessionBody:
+      type: object
+      properties:
+        cashierName:
+          type: string
+        openingCash:
+          type: number
+      required: [cashierName, openingCash]
+
+    # ── Transaction ───────────────────────────────────────────────────────────
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        invoiceNumber:
+          type: string
+        sessionId:
+          type: integer
+          nullable: true
+        customerId:
+          type: integer
+          nullable: true
+        customerName:
+          type: string
+          nullable: true
+        subtotal:
+          type: number
+        discount:
+          type: number
+        tax:
+          type: number
+        total:
+          type: number
+        status:
+          type: string
+          enum: [pending, paid, cancelled, refunded]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, invoiceNumber, subtotal, discount, tax, total, status, createdAt]
+
+    TransactionItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        subtotal:
+          type: number
+      required: [id, productId, productName, quantity, unitPrice, subtotal]
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+        method:
+          type: string
+          enum: [tunai, qris, transfer, kartu, cicilan]
+        amount:
+          type: number
+        reference:
+          type: string
+          nullable: true
+        paidAt:
+          type: string
+          format: date-time
+      required: [id, method, amount, paidAt]
+
+    TransactionDetail:
+      allOf:
+        - $ref: "#/components/schemas/Transaction"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/TransactionItem"
+            payments:
+              type: array
+              items:
+                $ref: "#/components/schemas/Payment"
+          required: [items, payments]
+
+    CreateTransactionBody:
+      type: object
+      properties:
+        sessionId:
+          type: integer
+          nullable: true
+        customerId:
+          type: integer
+          nullable: true
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: integer
+              quantity:
+                type: integer
+              unitPrice:
+                type: number
+            required: [productId, quantity, unitPrice]
+        discount:
+          type: number
+          default: 0
+        tax:
+          type: number
+          default: 0
+        notes:
+          type: string
+      required: [items]
+
+    PayTransactionBody:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            type: object
+            properties:
+              method:
+                type: string
+                enum: [tunai, qris, transfer, kartu, cicilan]
+              amount:
+                type: number
+              reference:
+                type: string
+            required: [method, amount]
+      required: [payments]
+
+    # ── Audit Log ─────────────────────────────────────────────────────────────
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: integer
+          nullable: true
+        performedBy:
+          type: string
+        ipAddress:
+          type: string
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, action, entityType, performedBy, createdAt]
+
+    # ── Security Stats ────────────────────────────────────────────────────────
+    SecurityStats:
+      type: object
+      properties:
+        totalAuditLogs:
+          type: integer
+        todayEvents:
+          type: integer
+        activeAlerts:
+          type: integer
+        securityLayers:
+          type: array
+          items:
+            type: object
+            properties:
+              layer:
+                type: string
+              status:
+                type: string
+                enum: [active, warning, inactive]
+              mechanism:
+                type: string
+              standard:
+                type: string
+            required: [layer, status, mechanism, standard]
+        recentEvents:
+          type: array
+          items:
+            type: object
+            properties:
+              time:
+                type: string
+              event:
+                type: string
+              level:
+                type: string
+                enum: [info, warning, critical]
+            required: [time, event, level]
+      required: [totalAuditLogs, todayEvents, activeAlerts, securityLayers, recentEvents]
+
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      properties:
+        totalRevenue:
+          type: number
+        totalTransactions:
+          type: integer
+        activeContracts:
+          type: integer
+        totalCustomers:
+          type: integer
+        revenueToday:
+          type: number
+        transactionsToday:
+          type: integer
+        pendingContracts:
+          type: integer
+        lowStockProducts:
+          type: integer
+      required: [totalRevenue, totalTransactions, activeContracts, totalCustomers, revenueToday, transactionsToday, pendingContracts, lowStockProducts]
+
+    RevenueChartPoint:
+      type: object
+      properties:
+        date:
+          type: string
+        revenue:
+          type: number
+        transactionCount:
+          type: integer
+      required: [date, revenue, transactionCount]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [transaction, contract, customer, security]
+        title:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+          nullable: true
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, type, title, description, status, createdAt]
+
+    ContractStats:
+      type: object
+      properties:
+        draft:
+          type: integer
+        active:
+          type: integer
+        completed:
+          type: integer
+        cancelled:
+          type: integer
+        totalValue:
+          type: number
+      required: [draft, active, completed, cancelled, totalValue]
