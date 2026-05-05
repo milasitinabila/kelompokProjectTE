@@ -31,7 +31,6 @@ export function Sidebar() {
   ];
 
   const links = isAdmin ? adminLinks : pelangganLinks;
-
   const roleLabel = isAdmin ? "Administrator" : "Pelanggan";
 
   return (
@@ -56,16 +55,13 @@ export function Sidebar() {
         {links.map((link) => {
           const Icon = link.icon;
           const isActive = location === link.href || (link.href !== "/" && location.startsWith(link.href));
-
           return (
             <Link key={link.href} href={link.href} className="outline-none block">
-              <div
-                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ${
-                  isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
+              <div className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ${
+                isActive
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}>
                 <Icon className="w-5 h-5" />
                 <span>{link.label}</span>
               </div>

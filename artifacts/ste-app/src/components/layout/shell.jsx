@@ -1,11 +1,6 @@
-import { ReactNode } from "react";
 import { Sidebar } from "./sidebar";
 
-interface ShellProps {
-  children: ReactNode;
-}
-
-export function Shell({ children }: ShellProps) {
+export function Shell({ children }) {
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden font-sans">
       <Sidebar />

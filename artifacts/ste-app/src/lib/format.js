@@ -1,4 +1,4 @@
-export const formatIDR = (amount: number) => {
+export const formatIDR = (amount) => {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -7,35 +7,35 @@ export const formatIDR = (amount: number) => {
   }).format(amount);
 };
 
-export const formatDate = (dateString: string) => {
+export const formatDate = (dateString) => {
   return new Intl.DateTimeFormat("id-ID", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(dateString));
 };
 
-export const formatShortDate = (dateString: string) => {
+export const formatShortDate = (dateString) => {
   return new Intl.DateTimeFormat("id-ID", {
     dateStyle: "medium",
   }).format(new Date(dateString));
 };
 
-export const formatTime = (dateString: string) => {
+export const formatTime = (dateString) => {
   return new Intl.DateTimeFormat("id-ID", {
     timeStyle: "short",
   }).format(new Date(dateString));
 };
 
-export const translateServiceType = (type: string) => {
-  const map: Record<string, string> = {
+export const translateServiceType = (type) => {
+  const map = {
     hitachi: "Hitachi",
     electrolux: "Electrolux",
   };
   return map[type] || type;
 };
 
-export const translatePaymentMethod = (method: string) => {
-  const map: Record<string, string> = {
+export const translatePaymentMethod = (method) => {
+  const map = {
     tunai: "Tunai",
     qris: "QRIS",
     transfer: "Transfer Bank",

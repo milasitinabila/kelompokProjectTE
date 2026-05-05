@@ -1,31 +1,16 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
-export interface AuthUser {
-  username: string;
-  name: string;
-  role: "admin" | "pelanggan";
-}
-
-interface AuthContextValue {
-  user: AuthUser | null;
-  isLoading: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  isAdmin: boolean;
-  isPelanggan: boolean;
-}
-
-const USERS: Array<{ username: string; password: string; name: string; role: "admin" | "pelanggan" }> = [
+const USERS = [
   { username: "admin", password: "admin123", name: "Administrator", role: "admin" },
   { username: "pelanggan", password: "pelanggan123", name: "Budi Santoso", role: "pelanggan" },
 ];
 
 const AUTH_KEY = "km_auth_user";
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+const AuthContext = createContext(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -41,12 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (username, password) => {
     const found = USERS.find(
       (u) => u.username === username.trim().toLowerCase() && u.password === password
     );
     if (!found) return false;
-    const authUser: AuthUser = { username: found.username, name: found.name, role: found.role };
+    const authUser = { username: found.username, name: found.name, role: found.role };
     setUser(authUser);
     localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
     return true;
@@ -71,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth(): AuthContextValue {
+export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;

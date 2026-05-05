@@ -12,7 +12,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -49,7 +49,6 @@ export default function Login() {
                   required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -62,13 +61,11 @@ export default function Login() {
                   required
                 />
               </div>
-
               {error && (
                 <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">
                   {error}
                 </div>
               )}
-
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Memproses..." : "Masuk"}
               </Button>

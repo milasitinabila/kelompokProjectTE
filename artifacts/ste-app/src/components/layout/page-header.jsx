@@ -1,12 +1,4 @@
-import { ReactNode } from "react";
-
-interface PageHeaderProps {
-  title: string;
-  description?: string;
-  children?: ReactNode;
-}
-
-export function PageHeader({ title, description, children }: PageHeaderProps) {
+export function PageHeader({ title, description, children }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>

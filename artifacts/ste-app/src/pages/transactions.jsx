@@ -1,49 +1,32 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  useListTransactions,
-  getListTransactionsQueryKey,
-  ListTransactionsStatus
-} from "@workspace/api-client-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useListTransactions, getListTransactionsQueryKey } from "@workspace/api-client-react";
 import { formatIDR, formatDate } from "@/lib/format";
 import { Receipt, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Transactions() {
-  const [status, setStatus] = useState<string>("all");
+  const [status, setStatus] = useState("all");
   const { isAdmin } = useAuth();
 
   const { data: transactions, isLoading } = useListTransactions(
-    { status: status !== "all" ? status as ListTransactionsStatus : undefined },
-    { query: { queryKey: getListTransactionsQueryKey({ status: status !== "all" ? status as ListTransactionsStatus : undefined }) } }
+    { status: status !== "all" ? status : undefined },
+    { query: { queryKey: getListTransactionsQueryKey({ status: status !== "all" ? status : undefined }) } }
   );
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid': return <Badge className="bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30">Lunas</Badge>;
-      case 'pending': return <Badge className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/30">Menunggu</Badge>;
-      case 'refunded': return <Badge className="bg-blue-500/20 text-blue-500 hover:bg-blue-500/30">Dikembalikan</Badge>;
+  const getStatusBadge = (s) => {
+    switch (s) {
+      case 'paid': return <Badge className="bg-emerald-500/20 text-emerald-500">Lunas</Badge>;
+      case 'pending': return <Badge className="bg-amber-500/20 text-amber-500">Menunggu</Badge>;
+      case 'refunded': return <Badge className="bg-blue-500/20 text-blue-500">Dikembalikan</Badge>;
       case 'cancelled': return <Badge variant="destructive">Dibatalkan</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
+      default: return <Badge variant="outline">{s}</Badge>;
     }
   };
 
@@ -60,9 +43,7 @@ export default function Transactions() {
           <Input placeholder="Cari nomor invoice..." className="pl-9 bg-card" />
         </div>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-full sm:w-[180px] bg-card">
-            <SelectValue placeholder="Filter Status" />
-          </SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[180px] bg-card"><SelectValue placeholder="Filter Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Status</SelectItem>
             <SelectItem value="paid">Lunas</SelectItem>
@@ -100,18 +81,10 @@ export default function Transactions() {
                       <Link href={`/transactions/${tx.id}`} className="absolute inset-0 z-10" />
                       {tx.invoiceNumber}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDate(tx.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      {tx.customerName || <span className="text-muted-foreground italic">Pelanggan Umum</span>}
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-primary">
-                      {formatIDR(tx.total)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {getStatusBadge(tx.status)}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(tx.createdAt)}</TableCell>
+                    <TableCell>{tx.customerName || <span className="text-muted-foreground italic">Pelanggan Umum</span>}</TableCell>
+                    <TableCell className="text-right font-bold text-primary">{formatIDR(tx.total)}</TableCell>
+                    <TableCell className="text-center">{getStatusBadge(tx.status)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
