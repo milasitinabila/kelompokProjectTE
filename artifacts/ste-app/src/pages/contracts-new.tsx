@@ -58,7 +58,7 @@ export default function ContractNew() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       customerId: 0,
-      serviceType: "servis",
+      serviceType: "hitachi",
       title: "",
       description: "",
       totalValue: 0,
@@ -141,10 +141,8 @@ export default function ContractNew() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="servis">Servis</SelectItem>
-                          <SelectItem value="instalasi">Instalasi</SelectItem>
-                          <SelectItem value="jual_beli">Jual Beli</SelectItem>
-                          <SelectItem value="konsultasi">Konsultasi</SelectItem>
+                          <SelectItem value="hitachi">Hitachi</SelectItem>
+                          <SelectItem value="electrolux">Electrolux</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

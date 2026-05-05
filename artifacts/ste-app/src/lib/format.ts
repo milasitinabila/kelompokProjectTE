@@ -28,10 +28,8 @@ export const formatTime = (dateString: string) => {
 
 export const translateServiceType = (type: string) => {
   const map: Record<string, string> = {
-    servis: "Servis",
-    instalasi: "Instalasi",
-    jual_beli: "Jual Beli",
-    konsultasi: "Konsultasi",
+    hitachi: "Hitachi",
+    electrolux: "Electrolux",
   };
   return map[type] || type;
 };

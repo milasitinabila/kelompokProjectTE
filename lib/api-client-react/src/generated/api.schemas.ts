@@ -36,10 +36,8 @@ export type ContractServiceType =
   (typeof ContractServiceType)[keyof typeof ContractServiceType];
 
 export const ContractServiceType = {
-  servis: "servis",
-  instalasi: "instalasi",
-  jual_beli: "jual_beli",
-  konsultasi: "konsultasi",
+  hitachi: "hitachi",
+  electrolux: "electrolux",
 } as const;
 
 export type ContractStatus =
@@ -77,10 +75,8 @@ export type CreateContractBodyServiceType =
   (typeof CreateContractBodyServiceType)[keyof typeof CreateContractBodyServiceType];
 
 export const CreateContractBodyServiceType = {
-  servis: "servis",
-  instalasi: "instalasi",
-  jual_beli: "jual_beli",
-  konsultasi: "konsultasi",
+  hitachi: "hitachi",
+  electrolux: "electrolux",
 } as const;
 
 export interface CreateContractBody {

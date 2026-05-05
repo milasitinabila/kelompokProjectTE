@@ -686,7 +686,7 @@ components:
           type: string
         serviceType:
           type: string
-          enum: [servis, instalasi, jual_beli, konsultasi]
+          enum: [hitachi, electrolux]
         title:
           type: string
         description:
@@ -730,7 +730,7 @@ components:
           type: integer
         serviceType:
           type: string
-          enum: [servis, instalasi, jual_beli, konsultasi]
+          enum: [hitachi, electrolux]
         title:
           type: string
         description:

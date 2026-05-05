@@ -94,7 +94,7 @@ export default function ContractDetail() {
             <CardHeader className="border-b bg-muted/20 pb-8 pt-8">
               <div className="flex justify-between items-start">
                 <div>
-                  <h1 className="text-3xl font-serif font-bold text-primary mb-2">STE</h1>
+                  <h1 className="text-3xl font-serif font-bold text-primary mb-2">Karya Mandiri</h1>
                   <p className="text-sm text-muted-foreground">Sistem Transaksi Elektronik</p>
                 </div>
                 <div className="text-right">
@@ -112,9 +112,9 @@ export default function ContractDetail() {
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <p className="font-bold text-muted-foreground uppercase text-xs mb-2">Pihak Pertama (Penyedia)</p>
-                  <p className="font-bold text-base">STE Services</p>
+                  <p className="font-bold text-base">Karya Mandiri</p>
                   <p>Jl. Teknologi No. 123</p>
-                  <p>Jakarta, Indonesia</p>
+                  <p>Bandung, Indonesia</p>
                 </div>
                 <div>
                   <p className="font-bold text-muted-foreground uppercase text-xs mb-2">Pihak Kedua (Pelanggan)</p>

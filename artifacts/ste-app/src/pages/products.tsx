@@ -92,7 +92,7 @@ export default function Products() {
                           {product.stock}
                         </span>
                         {product.unit && <span className="text-xs text-muted-foreground">{product.unit}</span>}
-                        {isLowStock && <AlertCircle className="w-4 h-4 text-destructive" title="Low Stock" />}
+                        {isLowStock && <AlertCircle className="w-4 h-4 text-destructive" aria-label="Low Stock" />}
                       </div>
                     </TableCell>
                     <TableCell>

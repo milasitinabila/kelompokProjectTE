@@ -19,6 +19,7 @@ import {
 } from "@workspace/api-client-react";
 import { formatIDR } from "@/lib/format";
 import { Search, ShoppingCart, Plus, Minus, Trash2, MonitorPlay, PowerOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface CartItem extends Product {
@@ -38,7 +39,6 @@ export default function Pos() {
   );
 
   const { data: sessions } = useListPosSessions(
-    {}, 
     { query: { queryKey: getListPosSessionsQueryKey() } }
   );
   

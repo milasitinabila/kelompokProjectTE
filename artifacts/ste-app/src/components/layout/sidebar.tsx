@@ -7,30 +7,33 @@ import {
   Package,
   Users,
   ShieldAlert,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Sidebar() {
   const [location] = useLocation();
+  const { user, logout } = useAuth();
 
   const links = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/pos", label: "POS", icon: Receipt },
-    { href: "/contracts", label: "Contracts", icon: FileText },
-    { href: "/transactions", label: "Transactions", icon: Activity },
-    { href: "/products", label: "Inventory", icon: Package },
-    { href: "/customers", label: "Customers", icon: Users },
-    { href: "/security", label: "Security", icon: ShieldAlert },
+    { href: "/contracts", label: "Kontrak", icon: FileText },
+    { href: "/transactions", label: "Transaksi", icon: Activity },
+    { href: "/products", label: "Inventaris", icon: Package },
+    { href: "/customers", label: "Pelanggan", icon: Users },
+    { href: "/security", label: "Keamanan", icon: ShieldAlert },
   ];
 
   return (
     <aside className="w-64 border-r border-border bg-card flex flex-col h-full">
       <div className="p-6 border-b border-border flex items-center gap-3">
-        <div className="w-8 h-8 rounded bg-primary flex items-center justify-center font-bold text-primary-foreground">
-          S
+        <div className="w-8 h-8 rounded bg-primary flex items-center justify-center font-bold text-primary-foreground text-sm">
+          KM
         </div>
         <div className="flex flex-col">
-          <span className="font-bold text-lg leading-none tracking-tight">STE</span>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Ops Hub</span>
+          <span className="font-bold text-lg leading-none tracking-tight">Karya Mandiri</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Sistem Transaksi</span>
         </div>
       </div>
       
@@ -59,12 +62,19 @@ export function Sidebar() {
       <div className="p-4 border-t border-border mt-auto">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground">
-            A
+            {user?.name?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">Admin User</span>
-            <span className="text-xs text-muted-foreground">Cashier & Mgr</span>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-sm font-medium truncate">{user?.name ?? "Pengguna"}</span>
+            <span className="text-xs text-muted-foreground truncate capitalize">{user?.role ?? ""}</span>
           </div>
+          <button
+            onClick={logout}
+            className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded"
+            title="Keluar"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </aside>
