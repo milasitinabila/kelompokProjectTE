@@ -8,6 +8,7 @@ import {
   Users,
   ShieldAlert,
   LogOut,
+  Wrench,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -26,8 +27,9 @@ export function Sidebar() {
   ];
 
   const pelangganLinks = [
+    { href: "/service-request", label: "Ajukan Servis", icon: Wrench },
     { href: "/contracts", label: "Kontrak Saya", icon: FileText },
-    { href: "/transactions", label: "Transaksi Saya", icon: Activity },
+    { href: "/transactions", label: "Tagihan Saya", icon: Activity },
   ];
 
   const links = isAdmin ? adminLinks : pelangganLinks;
@@ -46,24 +48,33 @@ export function Sidebar() {
       </div>
 
       {!isAdmin && (
-        <div className="mx-3 mt-3 px-3 py-2 rounded-md bg-primary/10 text-primary text-xs text-center">
-          Selamat datang, {user?.name}
+        <div className="mx-3 mt-3 px-3 py-2 rounded-md bg-primary/10 text-primary text-xs text-center font-medium">
+          Selamat datang, {user?.name?.split(" ")[0]}!
         </div>
       )}
 
       <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
         {links.map((link) => {
           const Icon = link.icon;
-          const isActive = location === link.href || (link.href !== "/" && location.startsWith(link.href));
+          const isActive =
+            location === link.href ||
+            (link.href !== "/" && location.startsWith(link.href));
           return (
             <Link key={link.href} href={link.href} className="outline-none block">
-              <div className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ${
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}>
+              <div
+                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ${
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                }`}
+              >
                 <Icon className="w-5 h-5" />
                 <span>{link.label}</span>
+                {link.href === "/service-request" && (
+                  <span className="ml-auto text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-bold">
+                    Baru
+                  </span>
+                )}
               </div>
             </Link>
           );

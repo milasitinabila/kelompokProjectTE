@@ -6,6 +6,7 @@ import { Shell } from "@/components/layout/shell";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
+import Register from "@/pages/register";
 
 import Dashboard from "@/pages/dashboard";
 import Pos from "@/pages/pos";
@@ -17,6 +18,7 @@ import TransactionDetail from "@/pages/transaction-detail";
 import Products from "@/pages/products";
 import Customers from "@/pages/customers";
 import Security from "@/pages/security";
+import ServiceRequest from "@/pages/service-request";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,7 +41,12 @@ function ProtectedRouter() {
   }
 
   if (!user) {
-    return <Login />;
+    return (
+      <Switch>
+        <Route path="/register" component={Register} />
+        <Route component={Login} />
+      </Switch>
+    );
   }
 
   if (isAdmin) {
@@ -65,15 +72,16 @@ function ProtectedRouter() {
   return (
     <Shell>
       <Switch>
+        <Route path="/service-request" component={ServiceRequest} />
         <Route path="/contracts" component={Contracts} />
         <Route path="/contracts/:id" component={ContractDetail} />
         <Route path="/transactions" component={Transactions} />
         <Route path="/transactions/:id" component={TransactionDetail} />
         <Route path="/">
-          <Redirect to="/contracts" />
+          <Redirect to="/service-request" />
         </Route>
         <Route>
-          <Redirect to="/contracts" />
+          <Redirect to="/service-request" />
         </Route>
       </Switch>
     </Shell>

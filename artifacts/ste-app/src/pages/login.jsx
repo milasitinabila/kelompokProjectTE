@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { UserPlus } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -71,8 +73,17 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-border/50">
-              <p className="text-xs text-muted-foreground text-center mb-3">Akun tersedia:</p>
+            <div className="mt-5 pt-4 border-t border-border/50">
+              <Link href="/register">
+                <Button variant="outline" className="w-full">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Daftar Akun Pelanggan Baru
+                </Button>
+              </Link>
+            </div>
+
+            <div className="mt-5 pt-4 border-t border-border/50">
+              <p className="text-xs text-muted-foreground text-center mb-3">Akun staf tersedia:</p>
               <div className="space-y-1.5 text-xs text-muted-foreground font-mono">
                 <div className="flex justify-between bg-muted/30 px-3 py-1.5 rounded">
                   <span>admin</span><span className="text-muted-foreground/60">admin123</span>
