@@ -31,6 +31,9 @@ export default function ContractNew() {
   const { data: customers, isLoading: loadingCustomers } = useListCustomers({}, { query: { queryKey: getListCustomersQueryKey() } });
   const createContract = useCreateContract();
 
+  // SAFE FALLBACK: Pastikan customers selalu array
+  const safeCustomers = Array.isArray(customers) ? customers : [];
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,8 +73,22 @@ export default function ContractNew() {
                   <FormItem>
                     <FormLabel>Pelanggan</FormLabel>
                     <Select onValueChange={(val) => field.onChange(Number(val))} value={field.value ? field.value.toString() : ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder={loadingCustomers ? "Memuat..." : "Pilih pelanggan"} /></SelectTrigger></FormControl>
-                      <SelectContent>{customers?.map((c) => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={loadingCustomers ? "Memuat..." : "Pilih pelanggan"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {loadingCustomers ? (
+                          <SelectItem value="loading" disabled>Memuat pelanggan...</SelectItem>
+                        ) : safeCustomers.length > 0 ? (
+                          safeCustomers.map((c) => (
+                            <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="none" disabled>Belum ada pelanggan</SelectItem>
+                        )}
+                      </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
@@ -80,7 +97,11 @@ export default function ContractNew() {
                   <FormItem>
                     <FormLabel>Jenis Layanan</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Pilih jenis layanan" /></SelectTrigger></FormControl>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih jenis layanan" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         <SelectItem value="hitachi">Hitachi</SelectItem>
                         <SelectItem value="electrolux">Electrolux</SelectItem>
@@ -94,7 +115,9 @@ export default function ContractNew() {
               <FormField control={form.control} name="title" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Judul Kontrak</FormLabel>
-                  <FormControl><Input placeholder="Contoh: Servis AC Hitachi 1.5 PK" {...field} /></FormControl>
+                  <FormControl>
+                    <Input placeholder="Contoh: Servis AC Hitachi 1.5 PK" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -102,7 +125,9 @@ export default function ContractNew() {
               <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Ruang Lingkup Pekerjaan</FormLabel>
-                  <FormControl><Textarea placeholder="Deskripsi detail pekerjaan yang akan dilakukan..." className="min-h-[120px]" {...field} /></FormControl>
+                  <FormControl>
+                    <Textarea placeholder="Deskripsi detail pekerjaan yang akan dilakukan..." className="min-h-[120px]" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -111,7 +136,9 @@ export default function ContractNew() {
                 <FormField control={form.control} name="totalValue" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Total Nilai (Rp)</FormLabel>
-                    <FormControl><Input type="number" {...field} /></FormControl>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -119,7 +146,11 @@ export default function ContractNew() {
                   <FormItem>
                     <FormLabel>Metode Pembayaran</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         <SelectItem value="tunai">Tunai</SelectItem>
                         <SelectItem value="qris">QRIS</SelectItem>
@@ -135,18 +166,38 @@ export default function ContractNew() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField control={form.control} name="startDate" render={({ field }) => (
-                  <FormItem><FormLabel>Tanggal Mulai</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel>Tanggal Mulai</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="estimatedEndDate" render={({ field }) => (
-                  <FormItem><FormLabel>Estimasi Selesai</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel>Estimasi Selesai</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="warrantyPeriod" render={({ field }) => (
-                  <FormItem><FormLabel>Garansi (Hari)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel>Garansi (Hari)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )} />
               </div>
 
               <div className="flex justify-end gap-4 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setLocation("/contracts")}>Batal</Button>
+                <Button type="button" variant="outline" onClick={() => setLocation("/contracts")}>
+                  Batal
+                </Button>
                 <Button type="submit" disabled={createContract.isPending}>
                   {createContract.isPending ? "Menyimpan..." : "Buat Draft Kontrak"}
                 </Button>

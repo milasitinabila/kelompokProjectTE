@@ -32,7 +32,10 @@ export default function Pos() {
     { query: { queryKey: getListPosSessionsQueryKey() } }
   );
 
-  const activeSession = sessions?.find(s => s.status === 'open');
+  // SAFE FALLBACK: Pastikan sessions selalu array
+  const safeSessions = Array.isArray(sessions) ? sessions : [];
+  const activeSession = safeSessions.find(s => s.status === 'open');
+  
   const openSession = useOpenPosSession();
   const closeSession = useClosePosSession();
   const createTx = useCreateTransaction();
@@ -102,6 +105,9 @@ export default function Pos() {
     );
   };
 
+  // Pastikan products selalu array untuk map
+  const safeProducts = Array.isArray(products) ? products : [];
+
   if (!activeSession) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
@@ -143,7 +149,7 @@ export default function Pos() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-1">
-              {products?.map(product => (
+              {safeProducts.map(product => (
                 <Card key={product.id} className="cursor-pointer hover:border-primary transition-all hover:-translate-y-1 overflow-hidden" onClick={() => addToCart(product)}>
                   <div className="h-2 bg-gradient-to-r from-primary to-accent" />
                   <CardContent className="p-4">

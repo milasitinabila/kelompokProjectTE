@@ -16,6 +16,10 @@ export default function Dashboard() {
   const { data: recentActivity, isLoading: loadingActivity } = useGetRecentActivity({ query: { queryKey: getGetRecentActivityQueryKey() } });
   const { data: contractStats, isLoading: loadingStats } = useGetContractStats({ query: { queryKey: getGetContractStatsQueryKey() } });
 
+  // SAFE FALLBACK: Pastikan semua data array selalu valid
+  const safeRevenueChart = Array.isArray(revenueChart) ? revenueChart : [];
+  const safeRecentActivity = Array.isArray(recentActivity) ? recentActivity : [];
+
   return (
     <div className="space-y-6">
       <PageHeader title="Dasbor" description="Ringkasan operasional dan performa harian toko." />
@@ -72,9 +76,9 @@ export default function Dashboard() {
             <div className="h-[300px]">
               {loadingChart ? (
                 <div className="h-full flex items-center justify-center text-muted-foreground">Memuat data grafik...</div>
-              ) : revenueChart && revenueChart.length > 0 ? (
+              ) : safeRevenueChart.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <AreaChart data={safeRevenueChart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -99,7 +103,9 @@ export default function Dashboard() {
           <Card>
             <CardHeader className="pb-3"><CardTitle>Pipeline Kontrak</CardTitle></CardHeader>
             <CardContent>
-              {loadingStats ? <div className="py-4 text-center text-muted-foreground">Memuat...</div> : (
+              {loadingStats ? (
+                <div className="py-4 text-center text-muted-foreground">Memuat...</div>
+              ) : (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center"><span className="text-sm text-muted-foreground">Draft</span><span className="font-bold">{contractStats?.draft || 0}</span></div>
                   <div className="flex justify-between items-center"><span className="text-sm text-muted-foreground">Aktif</span><span className="font-bold text-primary">{contractStats?.active || 0}</span></div>
@@ -113,9 +119,11 @@ export default function Dashboard() {
           <Card>
             <CardHeader className="pb-3"><CardTitle>Aktivitas Terbaru</CardTitle></CardHeader>
             <CardContent>
-              {loadingActivity ? <div className="py-4 text-center text-muted-foreground">Memuat...</div> : recentActivity && recentActivity.length > 0 ? (
+              {loadingActivity ? (
+                <div className="py-4 text-center text-muted-foreground">Memuat...</div>
+              ) : safeRecentActivity.length > 0 ? (
                 <div className="space-y-4">
-                  {recentActivity.map((activity) => (
+                  {safeRecentActivity.map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3">
                       <div className={`mt-0.5 w-2 h-2 rounded-full ${activity.type === 'transaction' ? 'bg-primary' : activity.type === 'contract' ? 'bg-accent' : activity.type === 'security' ? 'bg-destructive' : 'bg-muted'}`} />
                       <div className="flex-1 space-y-1">
@@ -127,7 +135,9 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-              ) : <div className="py-4 text-center text-muted-foreground text-sm">Belum ada aktivitas</div>}
+              ) : (
+                <div className="py-4 text-center text-muted-foreground text-sm">Belum ada aktivitas</div>
+              )}
             </CardContent>
           </Card>
         </div>

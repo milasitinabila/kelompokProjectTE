@@ -20,6 +20,9 @@ export default function Contracts() {
     { query: { queryKey: getListContractsQueryKey({ status: statusFilter !== "all" ? statusFilter : undefined }) } }
   );
 
+  // SAFE FALLBACK: Pastikan contracts selalu array
+  const safeContracts = Array.isArray(contracts) ? contracts : [];
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'bg-primary/20 text-primary hover:bg-primary/30';
@@ -71,14 +74,14 @@ export default function Contracts() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1,2,3,4,5,6].map((i) => <Card key={i} className="animate-pulse"><CardContent className="p-6 h-48 bg-muted/20" /></Card>)}
         </div>
-      ) : contracts?.length === 0 ? (
+      ) : safeContracts.length === 0 ? (
         <div className="text-center py-20 border border-dashed rounded-lg bg-card/50">
           <p className="text-muted-foreground mb-4">Belum ada kontrak ditemukan.</p>
           {isAdmin && <Link href="/contracts/new"><Button variant="outline">Buat kontrak pertama</Button></Link>}
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {contracts?.map((contract) => (
+          {safeContracts.map((contract) => (
             <Link key={contract.id} href={`/contracts/${contract.id}`} className="block outline-none hover-elevate rounded-lg">
               <Card className="h-full transition-colors hover:border-primary/50 cursor-pointer">
                 <CardContent className="p-5 flex flex-col h-full justify-between">

@@ -36,6 +36,9 @@ export default function Products() {
     { query: { queryKey: getListProductsQueryKey({ search: search || undefined }) } }
   );
 
+  // SAFE FALLBACK: Pastikan products selalu array
+  const safeProducts = Array.isArray(products) ? products : [];
+
   const openAdd = () => {
     setEditingProduct(null);
     setForm(EMPTY_FORM);
@@ -112,7 +115,7 @@ export default function Products() {
       <Card className="bg-card overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">Memuat inventaris...</div>
-        ) : products?.length === 0 ? (
+        ) : safeProducts.length === 0 ? (
           <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
             <Package className="w-12 h-12 mb-4 opacity-20" />
             <p>Belum ada produk ditemukan.</p>
@@ -130,7 +133,7 @@ export default function Products() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products?.map((product) => {
+              {safeProducts.map((product) => {
                 const isLowStock = product.stock <= (product.minStock || 5);
                 return (
                   <TableRow key={product.id} className="group">

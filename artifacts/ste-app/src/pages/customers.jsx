@@ -23,6 +23,9 @@ export default function Customers() {
     { query: { queryKey: getListCustomersQueryKey({ search: search || undefined }) } }
   );
 
+  // SAFE FALLBACK: Pastikan customers selalu array
+  const safeCustomers = Array.isArray(customers) ? customers : [];
+
   const handleSubmit = (e) => {
     e.preventDefault();
     createCustomer.mutate(
@@ -34,7 +37,10 @@ export default function Customers() {
           setShowModal(false);
           setForm({ name: "", phone: "", email: "", address: "" });
         },
-        onError: () => toast({ variant: "destructive", title: "Gagal", description: "Pelanggan gagal ditambahkan." }),
+        onError: (error) => {
+          console.error("Error detail:", error);
+          toast({ variant: "destructive", title: "Gagal", description: "Pelanggan gagal ditambahkan." });
+        },
       }
     );
   };
@@ -54,7 +60,7 @@ export default function Customers() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1,2,3,4,5,6].map(i => <Card key={i} className="animate-pulse h-32 bg-muted/20" />)}
         </div>
-      ) : customers?.length === 0 ? (
+      ) : safeCustomers.length === 0 ? (
         <div className="p-16 text-center border border-dashed rounded-lg bg-card/50">
           <User className="w-12 h-12 mb-4 mx-auto opacity-20" />
           <p className="text-muted-foreground mb-4">Belum ada pelanggan ditemukan.</p>
@@ -62,7 +68,7 @@ export default function Customers() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {customers?.map((customer) => (
+          {safeCustomers.map((customer) => (
             <Card key={customer.id} className="hover-elevate hover:border-primary/50 transition-colors cursor-pointer group">
               <CardContent className="p-6">
                 <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-lg mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
@@ -102,7 +108,9 @@ export default function Customers() {
             </div>
             <DialogFooter className="gap-2">
               <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Batal</Button>
-              <Button type="submit" disabled={createCustomer.isPending}>{createCustomer.isPending ? "Menyimpan..." : "Simpan"}</Button>
+              <Button type="submit" disabled={createCustomer.isPending}>
+                {createCustomer.isPending ? "Menyimpan..." : "Simpan"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

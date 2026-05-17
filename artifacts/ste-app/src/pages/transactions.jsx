@@ -20,6 +20,9 @@ export default function Transactions() {
     { query: { queryKey: getListTransactionsQueryKey({ status: status !== "all" ? status : undefined }) } }
   );
 
+  // SAFE FALLBACK: Pastikan transactions selalu array
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
   const getStatusBadge = (s) => {
     switch (s) {
       case 'paid': return <Badge className="bg-emerald-500/20 text-emerald-500">Lunas</Badge>;
@@ -43,7 +46,9 @@ export default function Transactions() {
           <Input placeholder="Cari nomor invoice..." className="pl-9 bg-card" />
         </div>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-full sm:w-[180px] bg-card"><SelectValue placeholder="Filter Status" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[180px] bg-card">
+            <SelectValue placeholder="Filter Status" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Status</SelectItem>
             <SelectItem value="paid">Lunas</SelectItem>
@@ -57,7 +62,7 @@ export default function Transactions() {
       <Card className="bg-card overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">Memuat transaksi...</div>
-        ) : transactions?.length === 0 ? (
+        ) : safeTransactions.length === 0 ? (
           <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
             <Receipt className="w-12 h-12 mb-4 opacity-20" />
             <p>Belum ada transaksi.</p>
@@ -75,7 +80,7 @@ export default function Transactions() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions?.map((tx) => (
+                {safeTransactions.map((tx) => (
                   <TableRow key={tx.id} className="hover:bg-muted/50 cursor-pointer relative group">
                     <TableCell className="font-mono font-medium">
                       <Link href={`/transactions/${tx.id}`} className="absolute inset-0 z-10" />
