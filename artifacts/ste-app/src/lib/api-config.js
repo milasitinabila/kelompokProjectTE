@@ -1,20 +1,17 @@
-// api-config.js - Memaksa semua API ke backend
+// API Base URL - otomatis berubah sesuai environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-// Ganti dengan alamat backend kamu
-const BACKEND_URL = 'http://localhost:8080';
+console.log('🌐 API Base URL:', API_BASE_URL);
 
-// Simpan URL asli
+// Override fetch global
 const originalFetch = window.fetch;
-
-// Override fetch
 window.fetch = function(url, options) {
-  // Jika URL mulai dengan /api, arahkan ke backend
   if (typeof url === 'string' && url.startsWith('/api')) {
-    const newUrl = BACKEND_URL + url;
-    console.log('🔄 Redirect API:', url, '→', newUrl);
+    const newUrl = API_BASE_URL + url;
+    console.log('🔄 Redirect:', url, '→', newUrl);
     return originalFetch(newUrl, options);
   }
   return originalFetch(url, options);
 };
 
-console.log('✅ API redirect aktif. Backend:', BACKEND_URL);
+export { API_BASE_URL };
