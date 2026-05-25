@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install"]
+
+[phases.build]
+cmds = ["cd api-server && pnpm run build"]
+
+[start]
+cmd = "cd api-server && node dist/index.js"
