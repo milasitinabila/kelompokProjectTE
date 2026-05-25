@@ -2,7 +2,7 @@
 nixPkgs = ["nodejs", "pnpm"]
 
 [phases.install]
-cmds = ["pnpm install"]
+cmds = ["pnpm install --no-frozen-lockfile"]
 
 [phases.build]
 cmds = ["cd api-server && pnpm run build"]
