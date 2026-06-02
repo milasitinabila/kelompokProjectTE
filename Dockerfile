@@ -1,11 +1,11 @@
 FROM node:20-alpine
 
-# Install pnpm using corepack
+# Enable corepack untuk pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Copy workspace files
+# Copy semua file yang diperlukan
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY api-server/package.json api-server/
 COPY artifacts/ ./artifacts/
@@ -13,7 +13,7 @@ COPY artifacts/ ./artifacts/
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# Copy all source code
+# Copy source code
 COPY . .
 
 # Build backend
