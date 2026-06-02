@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Copy semua file yang diperlukan
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY api-server/package.json api-server/
+COPY /artifacts/api-server/package.json api-server/
 
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
