@@ -1,3 +1,5 @@
+FROM node:20-alpine
+
 WORKDIR /app
 
 # 1. Copy root configurations
