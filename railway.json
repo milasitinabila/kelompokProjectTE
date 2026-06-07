@@ -1,9 +1,8 @@
 {
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm install -g pnpm && pnpm install --no-frozen-lockfile && cd api-server && pnpm run build"
+    "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd api-server && node dist/index.js"
+    "startCommand": "node artifacts/api-server/dist/index.mjs"
   }
 }
