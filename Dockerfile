@@ -2,18 +2,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# 0. Aktifkan pnpm melalui corepack
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # 1. Copy root configurations
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # 2. Copy ALL workspace package.json files
 COPY artifacts/api-server/package.json artifacts/api-server/
-
-# PERBAIKAN: Ubah artifacts menjadi lib sesuai struktur folder Anda
 COPY lib/db/package.json lib/db/
 COPY lib/api-zod/package.json lib/api-zod/
-
-# (Catatan: Jika api-server Anda juga meng-import 'api-spec', buka komentar di bawah ini)
-# COPY lib/api-spec/package.json lib/api-spec/
 
 # 3. Install dependencies (pnpm will now link the workspaces)
 RUN pnpm install --no-frozen-lockfile
@@ -23,3 +21,7 @@ COPY . .
 
 # 5. Build
 RUN cd artifacts/api-server && pnpm run build
+
+# 6. Start the server (Pastikan Anda menambahkan perintah untuk menjalankan server)
+# Contoh: CMD ["node", "artifacts/api-server/build.mjs"] 
+# Sesuaikan dengan perintah start yang ada di package.json api-server Anda.
