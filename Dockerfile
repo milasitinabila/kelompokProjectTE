@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# Ubah baris ini:
+FROM node:22-alpine
 
 WORKDIR /app
 
