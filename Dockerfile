@@ -7,9 +7,13 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # 2. Copy ALL workspace package.json files
 COPY artifacts/api-server/package.json artifacts/api-server/
-COPY artifacts/db/package.json artifacts/db/
-COPY artifacts/api-zod/package.json artifacts/api-zod/
-# (Make sure to add any other workspace packages you might have)
+
+# PERBAIKAN: Ubah artifacts menjadi lib sesuai struktur folder Anda
+COPY lib/db/package.json lib/db/
+COPY lib/api-zod/package.json lib/api-zod/
+
+# (Catatan: Jika api-server Anda juga meng-import 'api-spec', buka komentar di bawah ini)
+# COPY lib/api-spec/package.json lib/api-spec/
 
 # 3. Install dependencies (pnpm will now link the workspaces)
 RUN pnpm install --no-frozen-lockfile

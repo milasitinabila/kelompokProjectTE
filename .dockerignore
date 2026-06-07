@@ -1,0 +1,7 @@
+node_modules
+.git
+.local
+.agents
+.config
+mockup-sandbox
+ste-app
