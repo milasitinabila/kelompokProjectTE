@@ -7,8 +7,14 @@ import { rm } from "node:fs/promises";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
-
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+
+// --- TAMBAHAN BARU ---
+// 1. Baca isi package.json
+const pkg = globalThis.require("./package.json");
+
+// 2. Ambil semua dependency NPM, KECUALI yang berasal dari @workspace/ internal Anda
+const externalDeps = Object.keys(pkg.dependencies || {}).filter(dep => !dep.startsWith("@workspace/"));
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
@@ -23,17 +29,14 @@ async function buildAll() {
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
     
-    // --- PERBAIKAN UTAMA DI SINI ---
-    // Baris ini secara otomatis mencegah esbuild membungkus SEMUA node_modules
-    packages: "external", 
+    // PERHATIAN: `packages: "external"` sudah DIHAPUS dari sini!
     
+    // Kita memasukkan `externalDeps` secara dinamis agar library NPM tidak ikut di-bundle, 
+    // tetapi kode @workspace akan diserap dan diterjemahkan menjadi JS murni.
     external: [
-      // Menambahkan package monorepo dan Drizzle secara eksplisit untuk keamanan ekstra
-      "drizzle-orm",
-      "@workspace/db",
-      "@workspace/api-zod",
+      ...externalDeps,
       
-      // Daftar bawaan Anda:
+      // --- Daftar Pengecualian Bawaan Anda ---
       "*.node",
       "sharp",
       "better-sqlite3",
