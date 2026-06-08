@@ -17,4 +17,4 @@ RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter api-server... run build
 
 # 5. Command untuk menjalankan server (Sesuaikan dengan file hasil build Anda)
-CMD ["pnpm", "--filter", "api-server", "run", "start"]
+CMD ["node", "artifacts/api-server/dist/index.mjs"]
