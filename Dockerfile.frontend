@@ -1,5 +1,6 @@
 # === TAHAP 1: Proses Build ===
-FROM node:22-alpine AS builder
+# Ganti alpine menjadi slim
+FROM node:22-slim AS builder
 
 WORKDIR /app
 
@@ -9,12 +10,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy seluruh monorepo
 COPY . .
 
-# TAMBAHKAN BARIS INI (Paksa Rollup untuk mengenali Alpine Linux)
-ENV npm_config_platform=linux
-ENV npm_config_architecture=x64
-ENV npm_config_libc=musl
-
-# Install dependencies
+# Install dependencies (sekarang Rollup Linux standar akan otomatis terunduh)
 RUN pnpm install --no-frozen-lockfile
 
 # Build khusus aplikasi frontend (Vite)
@@ -22,7 +18,8 @@ RUN pnpm --filter ste-app... run build
 
 
 # === TAHAP 2: Server Produksi (Sangat Ringan) ===
-FROM node:22-alpine
+# Ganti alpine menjadi slim
+FROM node:22-slim
 
 WORKDIR /app
 
