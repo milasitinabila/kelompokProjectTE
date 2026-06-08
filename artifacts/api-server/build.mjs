@@ -35,6 +35,8 @@ async function buildAll() {
     // tetapi kode @workspace akan diserap dan diterjemahkan menjadi JS murni.
     external: [
       ...externalDeps,
+
+      "drizzle-zod",
       
       // --- Daftar Pengecualian Bawaan Anda ---
       "*.node",
