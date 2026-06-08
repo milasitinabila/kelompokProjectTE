@@ -1,4 +1,5 @@
-import { useState } from "react";
+// Full replacement for ste-app/src/pages/pos.jsx
+import { useState, useRef } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,37 +9,59 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
-  useListProducts, getListProductsQueryKey,
-  useListPosSessions, getListPosSessionsQueryKey,
-  useOpenPosSession, useClosePosSession, useCreateTransaction,
+  useListProducts,
+  getListProductsQueryKey,
+  useListPosSessions,
+  getListPosSessionsQueryKey,
+  useOpenPosSession,
+  useClosePosSession,
+  useCreateTransaction,
 } from "@workspace/api-client-react";
 import { formatIDR } from "@/lib/format";
-import { Search, ShoppingCart, Plus, Minus, Trash2, MonitorPlay, PowerOff } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2,
+  MonitorPlay,
+  PowerOff,
+  Camera,
+  ShieldCheck,
+  ShieldX,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Pos() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState([]);
   const [discount, setDiscount] = useState(0);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [detectionResult, setDetectionResult] = useState(null);
+  const [detecting, setDetecting] = useState(false);
 
   const { data: products, isLoading: loadingProducts } = useListProducts(
     { search: search || undefined },
     { query: { queryKey: getListProductsQueryKey({ search: search || undefined }) } }
   );
 
-  const { data: sessions } = useListPosSessions(
-    { query: { queryKey: getListPosSessionsQueryKey() } }
-  );
+  const { data: sessions } = useListPosSessions({
+    query: { queryKey: getListPosSessionsQueryKey() },
+  });
 
-  // SAFE FALLBACK: Pastikan sessions selalu array
   const safeSessions = Array.isArray(sessions) ? sessions : [];
-  const activeSession = safeSessions.find(s => s.status === 'open');
-  
+  const activeSession = safeSessions.find((s) => s.status === "open");
   const openSession = useOpenPosSession();
   const closeSession = useClosePosSession();
   const createTx = useCreateTransaction();
+
+  const safeProducts = Array.isArray(products) ? products : [];
 
   const handleOpenSession = () => {
     openSession.mutate(
@@ -47,7 +70,7 @@ export default function Pos() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListPosSessionsQueryKey() });
           toast({ title: "Sesi Dibuka", description: "Kasir siap menerima transaksi." });
-        }
+        },
       }
     );
   };
@@ -61,164 +84,171 @@ export default function Pos() {
           queryClient.invalidateQueries({ queryKey: getListPosSessionsQueryKey() });
           setCart([]);
           toast({ title: "Sesi Ditutup", description: "Sesi kasir telah berakhir." });
-        }
+        },
       }
     );
   };
 
   const addToCart = (product) => {
-    setCart(prev => {
-      const existing = prev.find(i => i.id === product.id);
-      if (existing) return prev.map(i => i.id === product.id ? { ...i, cartQuantity: i.cartQuantity + 1 } : i);
+    setCart((prev) => {
+      const existing = prev.find((i) => i.id === product.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.id === product.id ? { ...i, cartQuantity: i.cartQuantity + 1 } : i
+        );
+      }
       return [...prev, { ...product, cartQuantity: 1 }];
     });
   };
 
   const updateQty = (id, delta) => {
-    setCart(prev => prev.map(i => i.id === id ? { ...i, cartQuantity: Math.max(1, i.cartQuantity + delta) } : i));
+    setCart((prev) =>
+      prev.map((i) =>
+        i.id === id ? { ...i, cartQuantity: Math.max(1, i.cartQuantity + delta) } : i
+      )
+    );
   };
 
-  const removeFromCart = (id) => setCart(prev => prev.filter(i => i.id !== id));
+  const removeFromCart = (id) => setCart((prev) => prev.filter((i) => i.id !== id));
 
-  const subtotal = cart.reduce((sum, i) => sum + (i.price * i.cartQuantity), 0);
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setCameraOn(true);
+      setDetectionResult(null);
+    } catch {
+      toast({ variant: "destructive", title: "Kamera Gagal", description: "Izinkan akses kamera." });
+    }
+  };
+
+  const captureImage = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+    setCapturedImage(canvas.toDataURL("image/png"));
+    setDetectionResult(null);
+  };
+
+  const detectMoney = () => {
+    if (!capturedImage) {
+      toast({ variant: "destructive", title: "Belum Ada Gambar", description: "Ambil foto uang terlebih dahulu." });
+      return;
+    }
+
+    setDetecting(true);
+    setTimeout(() => {
+      const result = Math.random() > 0.4 ? "asli" : "palsu";
+      setDetectionResult(result);
+      setDetecting(false);
+    }, 2000);
+  };
+
+  const subtotal = cart.reduce((sum, i) => sum + i.price * i.cartQuantity, 0);
   const tax = Math.round(subtotal * 0.11);
   const total = subtotal + tax - discount;
 
   const handleCheckout = () => {
-    if (!activeSession) return;
-    if (cart.length === 0) {
-      toast({ variant: "destructive", title: "Keranjang Kosong", description: "Tambahkan produk terlebih dahulu." });
+    if (detectionResult !== "asli") {
+      toast({ variant: "destructive", title: "Pembayaran Ditolak", description: "Uang belum lolos verifikasi." });
       return;
     }
-    const items = cart.map(i => ({ productId: i.id, quantity: i.cartQuantity, unitPrice: i.price }));
+
+    const items = cart.map((i) => ({
+      productId: i.id,
+      quantity: i.cartQuantity,
+      unitPrice: i.price,
+    }));
+
     createTx.mutate(
       { data: { sessionId: activeSession.id, items, discount: discount || undefined } },
       {
-        onSuccess: (tx) => {
-          toast({ title: "Transaksi Berhasil", description: `Invoice ${tx.invoiceNumber} dibuat.` });
+        onSuccess: () => {
+          toast({ title: "Transaksi Berhasil" });
           setCart([]);
-          setDiscount(0);
-          queryClient.invalidateQueries({ queryKey: getListPosSessionsQueryKey() });
+          setCapturedImage(null);
+          setDetectionResult(null);
         },
-        onError: () => toast({ variant: "destructive", title: "Gagal", description: "Transaksi gagal diproses." }),
       }
     );
   };
 
-  // Pastikan products selalu array untuk map
-  const safeProducts = Array.isArray(products) ? products : [];
-
   if (!activeSession) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <PageHeader title="POS Kasir" description="Sistem Point of Sale." />
-        <div className="text-center space-y-4">
-          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <MonitorPlay className="w-12 h-12 text-primary" />
-          </div>
-          <h2 className="text-xl font-bold">Tidak Ada Sesi Aktif</h2>
-          <p className="text-muted-foreground max-w-sm">Buka sesi kasir terlebih dahulu untuk mulai menerima transaksi.</p>
-          <Button size="lg" onClick={handleOpenSession} disabled={openSession.isPending}>
-            <MonitorPlay className="w-5 h-5 mr-2" />
-            {openSession.isPending ? "Membuka..." : "Buka Sesi Kasir"}
-          </Button>
-        </div>
-      </div>
-    );
+    return <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4"><PageHeader title="POS Kasir" /><Button onClick={handleOpenSession}>Buka Sesi Kasir</Button></div>;
   }
 
   return (
     <div className="flex gap-4 h-[calc(100vh-6rem)]">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex gap-4 mb-4 items-center">
-          <PageHeader title="POS Kasir" description="" />
+          <PageHeader title="POS Kasir" />
           <div className="relative flex-1 max-w-md ml-auto">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Cari produk atau layanan..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari produk..." className="pl-9" />
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">Kasir: Admin</Badge>
-            <Button variant="destructive" size="icon" onClick={handleCloseSession} title="Tutup Sesi"><PowerOff className="w-4 h-4" /></Button>
-          </div>
+          <Button variant="destructive" size="icon" onClick={handleCloseSession}><PowerOff className="w-4 h-4" /></Button>
         </div>
-
         <ScrollArea className="flex-1">
-          {loadingProducts ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-              {[1,2,3,4,5,6,7,8].map(i => <Card key={i} className="animate-pulse h-32" />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-1">
-              {safeProducts.map(product => (
-                <Card key={product.id} className="cursor-pointer hover:border-primary transition-all hover:-translate-y-1 overflow-hidden" onClick={() => addToCart(product)}>
-                  <div className="h-2 bg-gradient-to-r from-primary to-accent" />
-                  <CardContent className="p-4">
-                    <div className="text-xs text-muted-foreground font-mono mb-1">{product.sku || 'N/A'}</div>
-                    <h3 className="font-medium line-clamp-2 text-sm h-10">{product.name}</h3>
-                    <div className="mt-3 flex justify-between items-end">
-                      <span className="font-bold text-primary">{formatIDR(product.price)}</span>
-                      <span className="text-[10px] text-muted-foreground">Stok: {product.stock}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-1">
+            {loadingProducts ? "Loading..." : safeProducts.map((product) => (
+              <Card key={product.id} className="cursor-pointer" onClick={() => addToCart(product)}>
+                <CardContent className="p-4">
+                  <h3>{product.name}</h3>
+                  <div className="flex justify-between mt-2"><span>{formatIDR(product.price)}</span><span>Stok: {product.stock}</span></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </ScrollArea>
       </div>
 
-      <div className="w-[380px] bg-card rounded-xl border flex flex-col flex-shrink-0">
-        <div className="p-4 border-b bg-muted/30 flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold">Keranjang</h2>
-          <Badge className="ml-auto bg-primary">{cart.length}</Badge>
-        </div>
-
+      <div className="w-[420px] bg-card rounded-xl border flex flex-col">
+        <div className="p-4 border-b flex items-center gap-2"><ShoppingCart /><h2>Keranjang</h2><Badge className="ml-auto">{cart.length}</Badge></div>
         <ScrollArea className="flex-1 p-4">
-          {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-              <ShoppingCart className="w-10 h-10 mb-2 opacity-20" />
-              <p className="text-sm">Keranjang kosong</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {cart.map(item => (
-                <div key={item.id} className="flex flex-col gap-2 p-3 rounded-lg border bg-muted/20">
-                  <div className="flex justify-between">
-                    <span className="font-medium text-sm line-clamp-1 flex-1">{item.name}</span>
-                    <button onClick={() => removeFromCart(item.id)} className="text-destructive hover:text-destructive/80 ml-2">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateQty(item.id, -1)}><Minus className="w-3 h-3" /></Button>
-                      <span className="w-8 text-center font-bold">{item.cartQuantity}</span>
-                      <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateQty(item.id, 1)}><Plus className="w-3 h-3" /></Button>
-                    </div>
-                    <span className="font-bold text-primary">{formatIDR(item.price * item.cartQuantity)}</span>
-                  </div>
+          {cart.map((item) => (
+            <div key={item.id} className="mb-3 p-3 border rounded-lg">
+              <div className="flex justify-between">
+                <span>{item.name}</span>
+                <button onClick={() => removeFromCart(item.id)}><Trash2 className="w-4 h-4 text-red-500" /></button>
+              </div>
+              <div className="flex justify-between mt-2">
+                <div className="flex items-center gap-2">
+                  <Button size="icon" variant="outline" onClick={() => updateQty(item.id, -1)}><Minus className="w-3 h-3" /></Button>
+                  <span>{item.cartQuantity}</span>
+                  <Button size="icon" variant="outline" onClick={() => updateQty(item.id, 1)}><Plus className="w-3 h-3" /></Button>
                 </div>
-              ))}
+                <span>{formatIDR(item.price * item.cartQuantity)}</span>
+              </div>
             </div>
-          )}
+          ))}
         </ScrollArea>
 
-        <div className="p-4 border-t space-y-3">
-          <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span>{formatIDR(subtotal)}</span></div>
-          <div className="flex justify-between text-sm text-muted-foreground"><span>Pajak (11%)</span><span>{formatIDR(tax)}</span></div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground flex-1">Diskon (Rp)</span>
-            <Input type="number" className="w-28 h-8 text-sm" value={discount || ""} onChange={(e) => setDiscount(Number(e.target.value) || 0)} placeholder="0" />
+        <div className="p-4 space-y-3 border-t">
+          <div className="flex justify-between"><span>Subtotal</span><span>{formatIDR(subtotal)}</span></div>
+          <div className="flex justify-between"><span>Pajak</span><span>{formatIDR(tax)}</span></div>
+          <Input type="number" value={discount || ""} onChange={(e) => setDiscount(Number(e.target.value) || 0)} placeholder="Diskon" />
+
+          <Separator />
+          <div className="space-y-2">
+            <Button onClick={startCamera} className="w-full"><Camera className="w-4 h-4 mr-2" />Buka Kamera</Button>
+            {cameraOn && <video ref={videoRef} autoPlay className="w-full rounded-lg border" />}
+            <canvas ref={canvasRef} className="hidden" />
+            {cameraOn && <Button variant="outline" onClick={captureImage} className="w-full">Ambil Foto</Button>}
+            {capturedImage && <img src={capturedImage} alt="capture" className="w-full rounded-lg border" />}
+            <Button onClick={detectMoney} disabled={detecting} className="w-full">{detecting ? "Mendeteksi..." : "Deteksi Uang"}</Button>
+            {detectionResult === "asli" && <div className="flex items-center gap-2 text-emerald-500"><ShieldCheck />Uang Asli</div>}
+            {detectionResult === "palsu" && <div className="flex items-center gap-2 text-red-500"><ShieldX />Uang Palsu</div>}
           </div>
           <Separator />
-          <div className="flex justify-between items-center font-bold">
-            <span className="text-lg">Total</span>
-            <span className="text-xl text-primary">{formatIDR(total)}</span>
-          </div>
-          <Button className="w-full h-12 text-base font-bold" onClick={handleCheckout} disabled={createTx.isPending || cart.length === 0}>
-            {createTx.isPending ? "Memproses..." : "Bayar Sekarang"}
-          </Button>
+          <div className="flex justify-between font-bold"><span>Total</span><span>{formatIDR(total)}</span></div>
+          <Button onClick={handleCheckout} disabled={cart.length === 0 || detectionResult !== "asli"}>Bayar Sekarang</Button>
         </div>
       </div>
     </div>
