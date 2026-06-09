@@ -21,7 +21,6 @@ import TransactionDetail from "@/pages/transaction-detail";
 import Products from "@/pages/products";
 import Customers from "@/pages/customers";
 import Security from "@/pages/security";
-import ServiceRequest from "@/pages/service-request";
 
 const queryClient = new QueryClient({
   defaultOptions: {
