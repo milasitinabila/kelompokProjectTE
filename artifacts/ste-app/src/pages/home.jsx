@@ -21,16 +21,8 @@ const LandingPage = () => {
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
           <button 
             onClick={() => setLocation('/login')} 
-            style={{ padding: '0.75rem 1.5rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            Login Admin
-          </button>
-          
-          <button 
-            onClick={() => setLocation('/pos')} 
-            style={{ padding: '0.75rem 1.5rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            Buka Kasir (POS)
+            style={{ padding: '0.75rem 1.5rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 'bold' }}>
+            Masuk
           </button>
         </div>
       </div>
