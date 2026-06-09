@@ -9,7 +9,6 @@ import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 
-// Import Landing Page yang sudah kamu tambahkan
 import LandingPage from '@/pages/home'; 
 import Dashboard from "@/pages/dashboard";
 import Pos from "@/pages/pos";
@@ -21,6 +20,7 @@ import TransactionDetail from "@/pages/transaction-detail";
 import Products from "@/pages/products";
 import Customers from "@/pages/customers";
 import Security from "@/pages/security";
+import ServiceRequest from "@/pages/service-request"; // INI YANG TADI HILANG!
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,7 +34,6 @@ const queryClient = new QueryClient({
 function ProtectedRouter() {
   const { user, isLoading, isAdmin } = useAuth();
 
-  // LOADING STATE
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -47,10 +46,8 @@ function ProtectedRouter() {
   if (!user) {
     return (
       <Switch>
-        {/* Tambahkan Landing Page di sini agar bisa diakses oleh publik */}
         <Route path="/" component={LandingPage} /> 
         <Route path="/register" component={Register} />
-        {/* Rute sembarang lainnya akan otomatis diarahkan ke komponen Login */}
         <Route component={Login} />
       </Switch>
     );
@@ -81,17 +78,16 @@ function ProtectedRouter() {
   return (
     <Shell>
       <Switch>
+        <Route path="/service-request" component={ServiceRequest} />
         <Route path="/contracts" component={Contracts} />
         <Route path="/contracts/:id" component={ContractDetail} />
         <Route path="/transactions" component={Transactions} />
         <Route path="/transactions/:id" component={TransactionDetail} />
         
-        {/* Perbaikan: Jika staff buka halaman utama, otomatis diarahkan ke /contracts */}
+        {/* User biasa otomatis diarahkan ke Ajukan Servis */}
         <Route path="/">
-          <Redirect to="/contracts" />
+          <Redirect to="/service-request" />
         </Route>
-        
-        {/* Perbaikan: Tangkap rute ngawur dan arahkan ke NotFound */}
         <Route component={NotFound} />
       </Switch>
     </Shell>

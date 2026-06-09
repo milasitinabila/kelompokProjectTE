@@ -49,7 +49,8 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-wrap gap-4">
-            <Link href="/register">
+            {/* PERUBAHAN: Link "Mulai Sekarang" diubah ke /service-request */}
+            <Link href="/service-request">
               <Button size="lg">
                 Mulai Sekarang
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -148,7 +149,8 @@ export default function LandingPage() {
             Ajukan permintaan servis sekarang dan tim kami akan segera menghubungi Anda.
           </p>
 
-          <Link href="/register">
+          {/* PERUBAHAN: Link di CTA bawah juga diubah ke /service-request */}
+          <Link href="/service-request">
             <Button variant="secondary" size="lg">
               Mulai Sekarang
             </Button>
