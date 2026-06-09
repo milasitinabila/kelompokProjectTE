@@ -72,7 +72,6 @@ function ProtectedRouter() {
           <Route path="/products" component={Products} />
           <Route path="/customers" component={Customers} />
           <Route path="/security" component={Security} />
-          <Route path="/money-detector" component={MoneyDetector} />
           <Route component={NotFound} />
         </Switch>
       </Shell>
