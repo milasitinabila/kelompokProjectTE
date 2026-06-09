@@ -1,8 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
-const landingpage = () => {
-  const navigate = useNavigate();
+const LandingPage = () => {
+  // Menggunakan useLocation dari wouter, bukan useNavigate
+  const [, setLocation] = useLocation();
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif' }}>
@@ -19,14 +20,14 @@ const landingpage = () => {
         {/* Tombol Navigasi */}
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
           <button 
-            onClick={() => navigate('/login')} 
+            onClick={() => setLocation('/login')} 
             style={{ padding: '0.75rem 1.5rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 'bold' }}
           >
             Login Admin
           </button>
           
           <button 
-            onClick={() => navigate('/pos')} 
+            onClick={() => setLocation('/pos')} 
             style={{ padding: '0.75rem 1.5rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', cursor: 'pointer', fontWeight: 'bold' }}
           >
             Buka Kasir (POS)
@@ -38,4 +39,4 @@ const landingpage = () => {
   );
 };
 
-export default landingpage;
+export default LandingPage;
