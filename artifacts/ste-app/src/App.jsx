@@ -82,7 +82,6 @@ function ProtectedRouter() {
   return (
     <Shell>
       <Switch>
-        <Route path="/service-request" component={ServiceRequest} />
         <Route path="/contracts" component={Contracts} />
         <Route path="/contracts/:id" component={ContractDetail} />
         <Route path="/transactions" component={Transactions} />
