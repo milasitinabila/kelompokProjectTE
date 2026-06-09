@@ -85,12 +85,14 @@ function ProtectedRouter() {
         <Route path="/contracts/:id" component={ContractDetail} />
         <Route path="/transactions" component={Transactions} />
         <Route path="/transactions/:id" component={TransactionDetail} />
+        
+        {/* Perbaikan: Jika staff buka halaman utama, otomatis diarahkan ke /contracts */}
         <Route path="/">
-          <Redirect to="/service-request" />
+          <Redirect to="/contracts" />
         </Route>
-        <Route>
-          <Redirect to="/service-request" />
-        </Route>
+        
+        {/* Perbaikan: Tangkap rute ngawur dan arahkan ke NotFound */}
+        <Route component={NotFound} />
       </Switch>
     </Shell>
   );
