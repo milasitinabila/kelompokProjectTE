@@ -10,7 +10,6 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 
 // Import Landing Page yang sudah kamu tambahkan
-import MoneyDetector from "@/pages/moneyDetector";
 import LandingPage from '@/pages/home'; 
 import Dashboard from "@/pages/dashboard";
 import Pos from "@/pages/pos";
