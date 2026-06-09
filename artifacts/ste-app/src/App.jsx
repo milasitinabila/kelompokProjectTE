@@ -10,7 +10,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 
 // Import Landing Page yang sudah kamu tambahkan
-import LandingPage from '@/pages/landingpage'; 
+import LandingPage from '@/pages/home'; 
 import Dashboard from "@/pages/dashboard";
 import Pos from "@/pages/pos";
 import Contracts from "@/pages/contracts";
