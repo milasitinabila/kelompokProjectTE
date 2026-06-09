@@ -62,7 +62,7 @@ function ProtectedRouter() {
     return (
       <Shell>
         <Switch>
-          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/" component={Dashboard} />
           <Route path="/pos" component={Pos} />
           <Route path="/contracts" component={Contracts} />
           <Route path="/contracts/new" component={ContractNew} />
