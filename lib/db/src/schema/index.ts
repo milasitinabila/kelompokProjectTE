@@ -4,3 +4,4 @@ export * from "./contracts";
 export * from "./pos";
 export * from "./transactions";
 export * from "./audit";
+export * from "./service_status";

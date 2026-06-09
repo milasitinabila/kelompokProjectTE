@@ -12,14 +12,12 @@
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
   },
   "dependencies": {
-    "@workspace/db": "workspace:*",
     "@workspace/api-zod": "workspace:*",
-
-    "drizzle-orm": "catalog:",
-
+    "@workspace/db": "workspace:*",
     "cookie-parser": "^1.4.7",
     "cors": "^2",
     "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.45.2",
     "express": "^5",
     "pg": "^8.12.0",
     "pino": "^9",
