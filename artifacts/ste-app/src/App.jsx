@@ -9,6 +9,8 @@ import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 
+// Import Landing Page yang sudah kamu tambahkan
+import LandingPage from '@/pages/landingpage'; 
 import Dashboard from "@/pages/dashboard";
 import Pos from "@/pages/pos";
 import Contracts from "@/pages/contracts";
@@ -33,6 +35,7 @@ const queryClient = new QueryClient({
 function ProtectedRouter() {
   const { user, isLoading, isAdmin } = useAuth();
 
+  // LOADING STATE
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -41,15 +44,20 @@ function ProtectedRouter() {
     );
   }
 
+  // 1. JIKA USER BELUM LOGIN (Publik)
   if (!user) {
     return (
       <Switch>
+        {/* Tambahkan Landing Page di sini agar bisa diakses oleh publik */}
+        <Route path="/" component={LandingPage} /> 
         <Route path="/register" component={Register} />
+        {/* Rute sembarang lainnya akan otomatis diarahkan ke komponen Login */}
         <Route component={Login} />
       </Switch>
     );
   }
 
+  // 2. JIKA USER ADALAH ADMIN
   if (isAdmin) {
     return (
       <Shell>
@@ -70,6 +78,7 @@ function ProtectedRouter() {
     );
   }
 
+  // 3. JIKA USER ADALAH STAFF/USER BIASA
   return (
     <Shell>
       <Switch>

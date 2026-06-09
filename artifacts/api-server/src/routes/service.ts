@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db } from "../../lib/db"; // Sesuaikan path import db-mu
-import { serviceStatus } from "../../lib/db/src/schema/service_status";
+import { db } from "../../../lib/db"; // Sesuaikan path import db-mu
+import { serviceStatus } from "../../../lib/db/src/schema/service_status.ts";
 import { eq } from "drizzle-orm";
 
 const router = Router();
