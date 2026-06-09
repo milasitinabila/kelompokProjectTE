@@ -15,11 +15,14 @@ import {
 import { formatIDR } from "@/lib/format";
 import { Search, ShoppingCart, Plus, Minus, Trash2, MonitorPlay, PowerOff } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import MoneyDetector from '@/components/MoneyDetector'; // Import komponen popup tadi
 
 export default function Pos() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  // State untuk mengontrol muncul/hilangnya kamera
+  const [showMoneyDetector, setShowMoneyDetector] = useState(false); 
   const [cart, setCart] = useState([]);
   const [discount, setDiscount] = useState(0);
 
@@ -32,7 +35,6 @@ export default function Pos() {
     { query: { queryKey: getListPosSessionsQueryKey() } }
   );
 
-  // SAFE FALLBACK: Pastikan sessions selalu array
   const safeSessions = Array.isArray(sessions) ? sessions : [];
   const activeSession = safeSessions.find(s => s.status === 'open');
   
@@ -105,7 +107,6 @@ export default function Pos() {
     );
   };
 
-  // Pastikan products selalu array untuk map
   const safeProducts = Array.isArray(products) ? products : [];
 
   if (!activeSession) {
@@ -128,99 +129,115 @@ export default function Pos() {
   }
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-6rem)]">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex gap-4 mb-4 items-center">
-          <PageHeader title="POS Kasir" description="" />
-          <div className="relative flex-1 max-w-md ml-auto">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Cari produk atau layanan..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+    <>
+      <div className="flex gap-4 h-[calc(100vh-6rem)] relative">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex gap-4 mb-4 items-center">
+            <PageHeader title="POS Kasir" description="" />
+            <div className="relative flex-1 max-w-md ml-auto">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Cari produk atau layanan..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">Kasir: Admin</Badge>
+              <Button variant="destructive" size="icon" onClick={handleCloseSession} title="Tutup Sesi"><PowerOff className="w-4 h-4" /></Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">Kasir: Admin</Badge>
-            <Button variant="destructive" size="icon" onClick={handleCloseSession} title="Tutup Sesi"><PowerOff className="w-4 h-4" /></Button>
-          </div>
+
+          <ScrollArea className="flex-1">
+            {loadingProducts ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[1,2,3,4,5,6,7,8].map(i => <Card key={i} className="animate-pulse h-32" />)}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-1">
+                {safeProducts.map(product => (
+                  <Card key={product.id} className="cursor-pointer hover:border-primary transition-all hover:-translate-y-1 overflow-hidden" onClick={() => addToCart(product)}>
+                    <div className="h-2 bg-gradient-to-r from-primary to-accent" />
+                    <CardContent className="p-4">
+                      <div className="text-xs text-muted-foreground font-mono mb-1">{product.sku || 'N/A'}</div>
+                      <h3 className="font-medium line-clamp-2 text-sm h-10">{product.name}</h3>
+                      <div className="mt-3 flex justify-between items-end">
+                        <span className="font-bold text-primary">{formatIDR(product.price)}</span>
+                        <span className="text-[10px] text-muted-foreground">Stok: {product.stock}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
         </div>
 
-        <ScrollArea className="flex-1">
-          {loadingProducts ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-              {[1,2,3,4,5,6,7,8].map(i => <Card key={i} className="animate-pulse h-32" />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-1">
-              {safeProducts.map(product => (
-                <Card key={product.id} className="cursor-pointer hover:border-primary transition-all hover:-translate-y-1 overflow-hidden" onClick={() => addToCart(product)}>
-                  <div className="h-2 bg-gradient-to-r from-primary to-accent" />
-                  <CardContent className="p-4">
-                    <div className="text-xs text-muted-foreground font-mono mb-1">{product.sku || 'N/A'}</div>
-                    <h3 className="font-medium line-clamp-2 text-sm h-10">{product.name}</h3>
-                    <div className="mt-3 flex justify-between items-end">
-                      <span className="font-bold text-primary">{formatIDR(product.price)}</span>
-                      <span className="text-[10px] text-muted-foreground">Stok: {product.stock}</span>
+        <div className="w-[380px] bg-card rounded-xl border flex flex-col flex-shrink-0">
+          <div className="p-4 border-b bg-muted/30 flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold">Keranjang</h2>
+            <Badge className="ml-auto bg-primary">{cart.length}</Badge>
+          </div>
+
+          <ScrollArea className="flex-1 p-4">
+            {cart.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+                <ShoppingCart className="w-10 h-10 mb-2 opacity-20" />
+                <p className="text-sm">Keranjang kosong</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {cart.map(item => (
+                  <div key={item.id} className="flex flex-col gap-2 p-3 rounded-lg border bg-muted/20">
+                    <div className="flex justify-between">
+                      <span className="font-medium text-sm line-clamp-1 flex-1">{item.name}</span>
+                      <button onClick={() => removeFromCart(item.id)} className="text-destructive hover:text-destructive/80 ml-2">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateQty(item.id, -1)}><Minus className="w-3 h-3" /></Button>
+                        <span className="w-8 text-center font-bold">{item.cartQuantity}</span>
+                        <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateQty(item.id, 1)}><Plus className="w-3 h-3" /></Button>
+                      </div>
+                      <span className="font-bold text-primary">{formatIDR(item.price * item.cartQuantity)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+
+          <div className="p-4 border-t space-y-3">
+            <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span>{formatIDR(subtotal)}</span></div>
+            <div className="flex justify-between text-sm text-muted-foreground"><span>Pajak (11%)</span><span>{formatIDR(tax)}</span></div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground flex-1">Diskon (Rp)</span>
+              <Input type="number" className="w-28 h-8 text-sm" value={discount || ""} onChange={(e) => setDiscount(Number(e.target.value) || 0)} placeholder="0" />
             </div>
-          )}
-        </ScrollArea>
+            <Separator />
+            <div className="flex justify-between items-center font-bold">
+              <span className="text-lg">Total</span>
+              <span className="text-xl text-primary">{formatIDR(total)}</span>
+            </div>
+            <Button className="w-full h-12 text-base font-bold" onClick={handleCheckout} disabled={createTx.isPending || cart.length === 0}>
+              {createTx.isPending ? "Memproses..." : "Bayar Sekarang"}
+            </Button>
+            
+            {/* Tombol pemicu kamera */}
+            <Button 
+              variant="outline" 
+              onClick={() => setShowMoneyDetector(true)}
+              className="w-full bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 mt-2"
+            >
+              🔍 Cek Uang Palsu
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="w-[380px] bg-card rounded-xl border flex flex-col flex-shrink-0">
-        <div className="p-4 border-b bg-muted/30 flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold">Keranjang</h2>
-          <Badge className="ml-auto bg-primary">{cart.length}</Badge>
-        </div>
-
-        <ScrollArea className="flex-1 p-4">
-          {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-              <ShoppingCart className="w-10 h-10 mb-2 opacity-20" />
-              <p className="text-sm">Keranjang kosong</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {cart.map(item => (
-                <div key={item.id} className="flex flex-col gap-2 p-3 rounded-lg border bg-muted/20">
-                  <div className="flex justify-between">
-                    <span className="font-medium text-sm line-clamp-1 flex-1">{item.name}</span>
-                    <button onClick={() => removeFromCart(item.id)} className="text-destructive hover:text-destructive/80 ml-2">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateQty(item.id, -1)}><Minus className="w-3 h-3" /></Button>
-                      <span className="w-8 text-center font-bold">{item.cartQuantity}</span>
-                      <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateQty(item.id, 1)}><Plus className="w-3 h-3" /></Button>
-                    </div>
-                    <span className="font-bold text-primary">{formatIDR(item.price * item.cartQuantity)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-
-        <div className="p-4 border-t space-y-3">
-          <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span>{formatIDR(subtotal)}</span></div>
-          <div className="flex justify-between text-sm text-muted-foreground"><span>Pajak (11%)</span><span>{formatIDR(tax)}</span></div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground flex-1">Diskon (Rp)</span>
-            <Input type="number" className="w-28 h-8 text-sm" value={discount || ""} onChange={(e) => setDiscount(Number(e.target.value) || 0)} placeholder="0" />
-          </div>
-          <Separator />
-          <div className="flex justify-between items-center font-bold">
-            <span className="text-lg">Total</span>
-            <span className="text-xl text-primary">{formatIDR(total)}</span>
-          </div>
-          <Button className="w-full h-12 text-base font-bold" onClick={handleCheckout} disabled={createTx.isPending || cart.length === 0}>
-            {createTx.isPending ? "Memproses..." : "Bayar Sekarang"}
-          </Button>
-        </div>
-      </div>
-    </div>
+      {/* Komponen Popup Kamera diletakkan di luar struktur layout utama agar posisinya bebas (fixed/melayang) */}
+      {showMoneyDetector && (
+        <MoneyDetector onClose={() => setShowMoneyDetector(false)} />
+      )}
+    </>
   );
 }
